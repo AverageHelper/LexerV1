@@ -8,23 +8,26 @@
 
 /* Begin PBXBuildFile section */
 		85D0BCF72327099E00FEE62C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85D0BCF62327099E00FEE62C /* main.cpp */; };
+		85D0BCFF2327135400FEE62C /* Input.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85D0BCFD2327132B00FEE62C /* Input.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		85D0BCF12327099E00FEE62C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
 			files = (
+				85D0BCFF2327135400FEE62C /* Input.txt in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		85D0BCF32327099E00FEE62C /* LexerV1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LexerV1; sourceTree = BUILT_PRODUCTS_DIR; };
 		85D0BCF62327099E00FEE62C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		85D0BCFD2327132B00FEE62C /* Input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Input.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,9 +60,18 @@
 		85D0BCF52327099E00FEE62C /* LexerV1 */ = {
 			isa = PBXGroup;
 			children = (
+				85D0BD00232714CC00FEE62C /* Samples */,
 				85D0BCF62327099E00FEE62C /* main.cpp */,
 			);
 			path = LexerV1;
+			sourceTree = "<group>";
+		};
+		85D0BD00232714CC00FEE62C /* Samples */ = {
+			isa = PBXGroup;
+			children = (
+				85D0BCFD2327132B00FEE62C /* Input.txt */,
+			);
+			path = Samples;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
