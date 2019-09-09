@@ -7,12 +7,12 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <fstream>
 
 const int MAIN_MENU_IMPORT_FILE = 0;
 const int MAIN_MENU_IMPORT_TEXT = 1;
-const std::string ERROR_CRIT_FAIL = "ERROR_CRIT_FAIL";
 
 int runStartMenu();
 std::string importFile();
@@ -20,7 +20,7 @@ std::string importText();
 int beginLexing(std::string text);
 
 int main() {
-    std::cout << "Hello, World!" << std::endl << std::endl;
+    std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl << std::endl;
     
     std::string userCode = "";
     int option = runStartMenu();
@@ -29,9 +29,6 @@ int main() {
         case MAIN_MENU_IMPORT_FILE:
             // Import a file
             userCode = importFile();
-            if (userCode == ERROR_CRIT_FAIL) {
-                std::cout << "That file could not be opened." << std::endl;
-            }
             break;
             
         case MAIN_MENU_IMPORT_TEXT:
@@ -78,6 +75,7 @@ int runStartMenu() {
     return userOption;
 }
 
+/// Returns a line from the standard input.
 std::string getUserLine() {
     std::string userInput = "";
     
@@ -87,6 +85,7 @@ std::string getUserLine() {
     return userInput;
 }
 
+/// Returns the contents of a file whose name the user provides.
 std::string importFile() {
     std::cout << "Enter the name of a file to import (include extension): ";
     
@@ -97,8 +96,10 @@ std::string importFile() {
     
     // Open user file
     iFS.open(filename);
-    if (!iFS.is_open()) {
-        return ERROR_CRIT_FAIL;
+    while (!iFS.is_open()) {
+        std::cout << "That file could not be opened. Enter another filename: ";
+        std::cin >> filename;
+        iFS.open(filename);
     }
     
     std::string input = "";
@@ -116,16 +117,39 @@ std::string importFile() {
     return input;
 }
 
+/// Returns a line from the user.
 std::string importText() {
     std::cout << "Enter a line of code: " << std::endl;
     
     return getUserLine();
 }
 
-int beginLexing(std::string text) {
-//    std::ostringstream stream = std::ostringstream(text);
+/// Performs the bulk of the pattern recognition.
+std::vector<std::string> parseTokensFromString(std::string input) {
+    std::vector<std::string> result = std::vector<std::string>();
     
-    std::cout << text << std::endl;
+    // Find patterns in `input`
+    result.push_back(input);
+    
+    return result;
+}
+
+/// Parses tokens from `text`. If successful, returns 0;
+int beginLexing(std::string text) {
+    std::istringstream stream = std::istringstream(text);
+    std::vector<std::string> tokens = std::vector<std::string>();
+    
+    // Parse tokens from stream
+    while (!stream.eof()) {
+        std::string blob = "";
+        stream >> blob;
+        std::vector<std::string> blobTokens = parseTokensFromString(blob);
+        for (unsigned int i = 0; i < blobTokens.size(); i += 1) {
+            tokens.push_back(blobTokens.at(i));
+        }
+    }
+    
+    std::cout << "Found " << tokens.size() << " tokens." << std::endl;
     
     return 0;
 }
