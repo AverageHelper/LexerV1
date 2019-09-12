@@ -6,87 +6,14 @@
 //
 
 #include <iostream>
-#include <string>
-#include <vector>
 #include <sstream>
 #include <fstream>
+#include "Recognizers.h"
 
-const int MAIN_MENU_IMPORT_FILE = 0;
-const int MAIN_MENU_IMPORT_TEXT = 1;
-
-int runStartMenu();
-std::string importFile();
-std::string importText();
-int beginLexing(std::string text);
+void printTokensInFile(std::ifstream& file);
 
 int main() {
-    std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl << std::endl;
-    
-    std::string userCode = "";
-    int option = runStartMenu();
-    
-    switch (option) {
-        case MAIN_MENU_IMPORT_FILE:
-            // Import a file
-            userCode = importFile();
-            break;
-            
-        case MAIN_MENU_IMPORT_TEXT:
-            // Await text input
-            userCode = importText();
-            break;
-            
-        default: break;
-    }
-    
-    return beginLexing(userCode);
-}
-
-/// Prints the import menu, returning the number of available options.
-int printImportMenu() {
-    std::cout << "Select an import option:" << std::endl;
-    
-    std::cout << "(" << MAIN_MENU_IMPORT_FILE << ") Import a file" << std::endl;
-    std::cout << "(" << MAIN_MENU_IMPORT_TEXT << ") Enter text" << std::endl;
-    
-    std::cout << std::endl << "Selection: ";
-    
-    return 2;
-}
-
-/// Prints the main menu to the standard output.
-/// Returns the user's selected option. (See the MAIN_MENU constants)
-int runStartMenu() {
-    int userOption = -1;
-    
-    const int available = printImportMenu();
-    std::cin >> userOption;
-    
-    while (std::cin.fail() || userOption < 0 || userOption >= available) {
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "Please enter a number between 0 and " << available - 1 << ".";
-        
-        std::cout << std::endl << std::endl;
-        printImportMenu();
-        std::cin >> userOption;
-    }
-    
-    return userOption;
-}
-
-/// Returns a line from the standard input.
-std::string getUserLine() {
-    std::string userInput = "";
-    
-    std::cin.ignore();
-    getline(std::cin, userInput);
-    
-    return userInput;
-}
-
-/// Returns the contents of a file whose name the user provides.
-std::string importFile() {
+    std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
     std::cout << "Enter the name of a file to import (include extension): ";
     
     std::string filename = "";
@@ -102,54 +29,93 @@ std::string importFile() {
         iFS.open(filename);
     }
     
-    std::string input = "";
-    getline(iFS, input);
+    std::cout << std::endl;
+    printTokensInFile(iFS);
+    std::cout << std::endl;
     
-    // Read contents of file
-    while (!iFS.eof()) {
-        input += "\n";
-        std::string nextLine = "";
-        getline(iFS, nextLine);
-        input += nextLine;
-    }
     iFS.close();
-    
-    return input;
+    return 0;
 }
 
-/// Returns a line from the user.
-std::string importText() {
-    std::cout << "Enter a line of code: " << std::endl;
-    
-    return getUserLine();
-}
+// MARK: - Lexing
 
-/// Performs the bulk of the pattern recognition.
-std::vector<std::string> parseTokensFromString(std::string input) {
-    std::vector<std::string> result = std::vector<std::string>();
-    
-    // Find patterns in `input`
-    result.push_back(input);
-    
-    return result;
-}
-
-/// Parses tokens from `text`. If successful, returns 0;
-int beginLexing(std::string text) {
-    std::istringstream stream = std::istringstream(text);
-    std::vector<std::string> tokens = std::vector<std::string>();
+/// Parses and prints tokens from open stream @c file.
+void printTokensInFile(std::ifstream& file) {
     
     // Parse tokens from stream
-    while (!stream.eof()) {
-        std::string blob = "";
-        stream >> blob;
-        std::vector<std::string> blobTokens = parseTokensFromString(blob);
-        for (unsigned int i = 0; i < blobTokens.size(); i += 1) {
-            tokens.push_back(blobTokens.at(i));
+    int currentLine = 1;
+    int tokenCount = 0;
+    
+    while (!file.eof()) {
+        char next = file.peek();
+        
+        switch (next) {
+            case '\n':
+            case EOF:
+                currentLine += 1;
+                file.ignore();
+                continue;
+                
+            case ' ':
+                file.ignore();
+                continue;
+                
+            case ',':
+            case '.':
+            case '?':
+            case '(':
+            case ')':
+            case '*':
+            case '+': {
+                Token token = OperatorRecognizer().recognizeTokenInStream(file);
+                token.setLineNum(currentLine);
+                std::cout << token.toString() << std::endl;
+                break;
+            }
+                
+            case ':': {
+                Token token;
+                char colon = file.get();
+                
+                if (file.peek() == '-') {
+                    file.ignore();
+                    token = Token(COLON_DASH, ":-", currentLine);
+                } else {
+                    token = Token(COLON, colon, currentLine);
+                }
+                
+                std::cout << token.toString() << std::endl;
+                break;
+            }
+                
+            case '#': {
+                Token token = CommentRecognizer().recognizeTokenInStream(file);
+                token.setLineNum(currentLine);
+                std::cout << token.toString() << std::endl;
+                break;
+            }
+                
+            case '\'': {
+                Token token = StringRecognizer().recognizeTokenInStream(file);
+                token.setLineNum(currentLine);
+                std::cout << token.toString() << std::endl;
+                break;
+            }
+                
+            default: {
+                Token token = IDRecognizer().recognizeTokenInStream(file);
+                token.setLineNum(currentLine);
+                std::cout << token.toString() << std::endl;
+                break;
+            }
         }
+        
+        tokenCount += 1;
     }
     
-    std::cout << "Found " << tokens.size() << " tokens." << std::endl;
+    Token eof = Token(EOF_T, "", currentLine);
+    std::cout << eof.toString() << std::endl;
+    tokenCount += 1;
     
-    return 0;
+    std::cout << "Total Tokens = " << tokenCount << std::endl;
 }

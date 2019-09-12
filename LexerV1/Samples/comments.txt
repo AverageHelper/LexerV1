@@ -1,0 +1,8 @@
+# this is a comment
+these are not
+#| this is also a comment
+it spans multiple lines
+   with weird indents |#
+???
+
+#| this is invalid
