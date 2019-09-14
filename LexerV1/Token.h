@@ -11,7 +11,7 @@
 
 #include "StandardTokens.h"
 
-struct Token {
+class Token {
 private:
     TokenType type;
     std::string value;

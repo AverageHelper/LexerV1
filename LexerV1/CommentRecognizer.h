@@ -17,7 +17,7 @@ private:
     bool isBlock();
     
 public:
-    virtual Token recognizeTokenInStream(std::istream& stream);
+    virtual Token* recognizeTokenInStream(std::istream& stream);
 };
 
 #endif /* CommentRecognizer_h */

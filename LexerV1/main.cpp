@@ -10,11 +10,13 @@
 #include <fstream>
 #include "Recognizers.h"
 
-void printTokensInFile(std::ifstream& file);
+std::vector<Token*> collectedTokensFromFile(std::ifstream& file);
+void printTokens(const std::vector<Token*>& tokens);
+void releaseTokens(std::vector<Token*>& tokens);
 
 int main() {
     std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
-    std::cout << "Enter the name of a file to import (include extension): ";
+    std::cout << "Enter the name of a file to tokenize (include extension): ";
     
     std::string filename = "";
     std::cin >> filename;
@@ -24,27 +26,33 @@ int main() {
     // Open user file
     iFS.open(filename);
     while (!iFS.is_open()) {
-        std::cout << "That file could not be opened. Enter another filename: ";
+        std::cout << "The file '" << filename
+            << "' could not be opened. Enter another filename: ";
         std::cin >> filename;
         iFS.open(filename);
     }
     
+    // Parse tokens
+    std::vector<Token*> tokens = collectedTokensFromFile(iFS);
+    iFS.close();
+    
     std::cout << std::endl;
-    printTokensInFile(iFS);
+    printTokens(tokens);
     std::cout << std::endl;
     
-    iFS.close();
+    // Free our memory.
+    releaseTokens(tokens);
     return 0;
 }
 
 // MARK: - Lexing
 
-/// Parses and prints tokens from open stream @c file.
-void printTokensInFile(std::ifstream& file) {
+/// Parses tokens in the open @c file stream.
+std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
+    std::vector<Token*> tokens = std::vector<Token*>();
     
     // Parse tokens from stream
     int currentLine = 1;
-    int tokenCount = 0;
     
     while (!file.eof()) {
         char next = file.peek();
@@ -67,55 +75,70 @@ void printTokensInFile(std::ifstream& file) {
             case ')':
             case '*':
             case '+': {
-                Token token = OperatorRecognizer().recognizeTokenInStream(file);
-                token.setLineNum(currentLine);
-                std::cout << token.toString() << std::endl;
+                Token* token = OperatorRecognizer().recognizeTokenInStream(file);
+                token->setLineNum(currentLine);
+                tokens.push_back(token);
                 break;
             }
                 
             case ':': {
-                Token token;
+                Token* token;
                 char colon = file.get();
                 
                 if (file.peek() == '-') {
                     file.ignore();
-                    token = Token(COLON_DASH, ":-", currentLine);
+                    token = new Token(COLON_DASH, ":-", currentLine);
                 } else {
-                    token = Token(COLON, colon, currentLine);
+                    token = new Token(COLON, colon, currentLine);
                 }
                 
-                std::cout << token.toString() << std::endl;
+                tokens.push_back(token);
                 break;
             }
                 
             case '#': {
-                Token token = CommentRecognizer().recognizeTokenInStream(file);
-                token.setLineNum(currentLine);
-                std::cout << token.toString() << std::endl;
+                Token* token = CommentRecognizer().recognizeTokenInStream(file);
+                token->setLineNum(currentLine);
+                tokens.push_back(token);
                 break;
             }
                 
             case '\'': {
-                Token token = StringRecognizer().recognizeTokenInStream(file);
-                token.setLineNum(currentLine);
-                std::cout << token.toString() << std::endl;
+                Token* token = StringRecognizer().recognizeTokenInStream(file);
+                token->setLineNum(currentLine);
+                tokens.push_back(token);
                 break;
             }
                 
             default: {
-                Token token = IDRecognizer().recognizeTokenInStream(file);
-                token.setLineNum(currentLine);
-                std::cout << token.toString() << std::endl;
+                Token* token = IDRecognizer().recognizeTokenInStream(file);
+                token->setLineNum(currentLine);
+                tokens.push_back(token);
                 break;
             }
         }
-        
-        tokenCount += 1;
     }
     
-    Token eof = Token(EOF_T, "", currentLine);
-    std::cout << eof.toString() << std::endl;
-    tokenCount += 1;
+    Token* eof = new Token(EOF_T, "", currentLine);
+    tokens.push_back(eof);
     
-    std::cout << "Total Tokens = " << tokenCount << std::endl;
+    return tokens;
+}
+
+/// Prints tokens in the given @c vector.
+void printTokens(const std::vector<Token*>& tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i += 1) {
+        std::cout << tokens.at(i)->toString() << std::endl;
+    }
+    
+    std::cout << "Total Tokens = " << tokens.size() << std::endl;
+}
+
+/// Deletes the pointers in @c tokens and clears the vector.
+void releaseTokens(std::vector<Token*>& tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i += 1) {
+        delete tokens.at(i);
+    }
+    
+    tokens.clear();
 }

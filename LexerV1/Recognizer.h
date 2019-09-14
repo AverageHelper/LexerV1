@@ -13,7 +13,7 @@
 
 class Recognizer {
 public:
-    virtual Token recognizeTokenInStream(std::istream& stream) = 0;
+    virtual Token* recognizeTokenInStream(std::istream& stream) = 0;
 };
 
 #endif /* Recognizer_h */

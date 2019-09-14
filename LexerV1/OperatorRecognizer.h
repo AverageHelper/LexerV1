@@ -12,7 +12,7 @@
 
 class OperatorRecognizer: Recognizer {
 public:
-    virtual Token recognizeTokenInStream(std::istream& stream);
+    virtual Token* recognizeTokenInStream(std::istream& stream);
 };
 
 #endif /* OperatorRecognizer_h */

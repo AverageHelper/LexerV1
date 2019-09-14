@@ -16,7 +16,7 @@ private:
     std::string buffer = "";
     
 public:
-    virtual Token recognizeTokenInStream(std::istream& stream);
+    virtual Token* recognizeTokenInStream(std::istream& stream);
 };
 
 #endif /* StringRecognizer_h */
