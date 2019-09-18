@@ -18,11 +18,13 @@ int main(int argc, char* argv[]) {
     std::string filename = "";
     
     if (argc <= 1) {
+        // If user didn't send anything in command line, ask for input.
         std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
         std::cout << "Enter the name of a file to tokenize (include extension): ";
         std::cin >> filename;
         
     } else {
+        // Silently take input if user passed a filename.
         filename = argv[1];
     }
     
@@ -31,12 +33,16 @@ int main(int argc, char* argv[]) {
     // Open user file
     iFS.open(filename);
     while (!iFS.is_open()) {
-        if (argc == 0) {
+        if (argc <= 1) {
+            // Try again if user's filename didn't work.
             std::cout << "The file '" << filename
                 << "' could not be opened. Enter another filename: ";
             std::cin >> filename;
             iFS.open(filename);
+            
         } else {
+            // Fail if user's filename didn't work.
+            std::cout << "The file '" << filename << "' could not be opened." << std::endl;
             return 1;
         }
     }
