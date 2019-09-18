@@ -14,8 +14,12 @@
 class StringRecognizer: Recognizer {
 private:
     std::string buffer = "";
+    int* lineNum = nullptr;
+    int state = 0;
+    Token* applyState();
     
 public:
+    StringRecognizer(int* lineNum);
     virtual Token* recognizeTokenInStream(std::istream& stream);
 };
 

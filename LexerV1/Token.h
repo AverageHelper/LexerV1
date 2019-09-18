@@ -55,7 +55,7 @@ public:
         this->lineNum = lineNum;
     }
     
-    Token(const TokenType type = UNDEFINED,
+    Token(const TokenType type,
           const std::string value = "",
           const int lineNum = -1) {
         this->type = type;

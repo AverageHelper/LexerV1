@@ -14,9 +14,11 @@
 class CommentRecognizer: Recognizer {
 private:
     std::string buffer = "";
+    int* lineNum = nullptr;
     bool isBlock();
     
 public:
+    CommentRecognizer(int* lineNum);
     virtual Token* recognizeTokenInStream(std::istream& stream);
 };
 

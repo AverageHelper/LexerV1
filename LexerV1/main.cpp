@@ -59,8 +59,11 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
         
         switch (next) {
             case '\n':
-            case EOF:
                 currentLine += 1;
+                file.ignore();
+                continue;
+                
+            case EOF:
                 file.ignore();
                 continue;
                 
@@ -97,15 +100,17 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
             }
                 
             case '#': {
-                Token* token = CommentRecognizer().recognizeTokenInStream(file);
-                token->setLineNum(currentLine);
+                int firstLine = currentLine;
+                Token* token = CommentRecognizer(&currentLine).recognizeTokenInStream(file);
+                token->setLineNum(firstLine);
                 tokens.push_back(token);
                 break;
             }
                 
             case '\'': {
-                Token* token = StringRecognizer().recognizeTokenInStream(file);
-                token->setLineNum(currentLine);
+                int firstLine = currentLine;
+                Token* token = StringRecognizer(&currentLine).recognizeTokenInStream(file);
+                token->setLineNum(firstLine);
                 tokens.push_back(token);
                 break;
             }

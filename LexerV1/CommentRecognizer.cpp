@@ -7,6 +7,11 @@
 
 #include "CommentRecognizer.h"
 
+CommentRecognizer::CommentRecognizer(int* lineNum) {
+    this->buffer = "";
+    this->lineNum = lineNum;
+}
+
 /// Returns @c true if the first two characters of the receiver's buffer
 /// begin a block comment. (i.e. "#|")
 bool CommentRecognizer::isBlock() {
@@ -31,6 +36,10 @@ Token* CommentRecognizer::recognizeTokenInStream(std::istream& stream) {
         next = stream.peek();
         
         buffer.append(std::string(1, thisChar));
+        
+        if (isBlock() && next == '\n' && lineNum != nullptr) {
+            (*lineNum) += 1;
+        }
         
         if (isBlock() && thisChar == '|' && next == '#') {
             // s4 (accept): Block comment has found its terminator
