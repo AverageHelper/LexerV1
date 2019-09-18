@@ -14,31 +14,38 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file);
 void printTokens(const std::vector<Token*>& tokens);
 void releaseTokens(std::vector<Token*>& tokens);
 
-int main() {
-    std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
-    std::cout << "Enter the name of a file to tokenize (include extension): ";
-    
+int main(int argc, char* argv[]) {
     std::string filename = "";
-    std::cin >> filename;
+    
+    if (argc <= 1) {
+        std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
+        std::cout << "Enter the name of a file to tokenize (include extension): ";
+        std::cin >> filename;
+        
+    } else {
+        filename = argv[1];
+    }
     
     std::ifstream iFS = std::ifstream();
     
     // Open user file
     iFS.open(filename);
     while (!iFS.is_open()) {
-        std::cout << "The file '" << filename
-            << "' could not be opened. Enter another filename: ";
-        std::cin >> filename;
-        iFS.open(filename);
+        if (argc == 0) {
+            std::cout << "The file '" << filename
+                << "' could not be opened. Enter another filename: ";
+            std::cin >> filename;
+            iFS.open(filename);
+        } else {
+            return 1;
+        }
     }
     
     // Parse tokens
     std::vector<Token*> tokens = collectedTokensFromFile(iFS);
     iFS.close();
     
-    std::cout << std::endl;
     printTokens(tokens);
-    std::cout << std::endl;
     
     // Free our memory.
     releaseTokens(tokens);
