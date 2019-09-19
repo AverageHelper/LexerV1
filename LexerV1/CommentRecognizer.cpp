@@ -22,16 +22,19 @@ bool CommentRecognizer::isBlock() {
 }
 
 Token* CommentRecognizer::recognizeTokenInStream(std::istream& stream) {
-    // s1: Await input
+    // s0: Await input
     char next = stream.peek();
     
     if (next != '#') {
-        // s2 (reject): Input doesn't begin a valid comment.
+        // s4 (reject): Input doesn't begin a valid comment.
         return new Token(UNDEFINED, stream.get(), -1);
     }
     
+    // s1
+    
+    // Stop if EOF or non-block sees /n
     while (next != EOF && !(!isBlock() && next == '\n')) {
-        // s3: Await input
+        // s2/s3: Await input (line comment/block comment)
         char thisChar = stream.get();
         next = stream.peek();
         
@@ -48,7 +51,7 @@ Token* CommentRecognizer::recognizeTokenInStream(std::istream& stream) {
         }
         
         if (isBlock() && next == EOF) {
-            // s2 (reject): Block comment hit end of line before termination.
+            // s4 (reject): Block comment hit end of line before termination.
             return new Token(UNDEFINED, buffer, -1);
         }
     }

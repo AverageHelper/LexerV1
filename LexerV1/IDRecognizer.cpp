@@ -8,11 +8,11 @@
 #include "IDRecognizer.h"
 
 Token* IDRecognizer::recognizeTokenInStream(std::istream& stream) {
-    // s1: Await input
+    // s0: Await input
     char next = stream.peek();
     
     if (isalpha(next)) {
-        // s2: Input begins a valid identifier.
+        // s1: Input begins a valid identifier.
         buffer.append(std::string(1, stream.get()));
         next = stream.peek();
     } else {
@@ -21,17 +21,19 @@ Token* IDRecognizer::recognizeTokenInStream(std::istream& stream) {
     }
     
     while (isalnum(next)) {
-        // s4: Await input, until we foresee a non-identifier character.
+        // s1: Await input, until we foresee a non-identifier character.
         buffer.append(std::string(1, stream.get()));
         next = stream.peek();
     }
     
+    // s2: Identifier is valid.
+    
     if (stringIsKeyword(buffer)) {
-        // s6 (accept): Identifier is a special token.
+        // s2 (accept): Identifier is a special token.
         TokenType type = tokenTypeForString(buffer);
         return new Token(type, buffer, -1);
     }
     
-    // s5 (accept): Identifier is valid.
+    // s2 (accept): Identifier is valid.
     return new Token(ID, buffer, -1);
 }

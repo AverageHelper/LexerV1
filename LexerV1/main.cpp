@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         } else {
             // Fail if user's filename didn't work.
             std::cout << "The file '" << filename << "' could not be opened." << std::endl;
-            return 1;
+            return 0;
         }
     }
     
@@ -99,12 +99,16 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
                 
             case ':': {
                 Token* token;
+                // s0: Await input
                 char colon = file.get();
+                // s1: We have a colon
                 
                 if (file.peek() == '-') {
+                    // s2 (accept): Receive dash, -> Token(':-')
                     file.ignore();
                     token = new Token(COLON_DASH, ":-", currentLine);
                 } else {
+                    // s3 (accept): Peek something else, -> Token(':')
                     token = new Token(COLON, colon, currentLine);
                 }
                 

@@ -24,6 +24,7 @@ Token* StringRecognizer::applyState() {
 }
 
 Token* StringRecognizer::recognizeTokenInStream(std::istream& stream) {
+    // s0: Await input
     char next = stream.peek();
     Token* appliedToken;
     
