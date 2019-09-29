@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include "Recognizers.h"
+#include "DatalogCheck.h"
 
 std::vector<Token*> collectedTokensFromFile(std::ifstream& file);
 void printTokens(const std::vector<Token*>& tokens);
@@ -51,11 +52,37 @@ int main(int argc, char* argv[]) {
     std::vector<Token*> tokens = collectedTokensFromFile(iFS);
     iFS.close();
     
-    printTokens(tokens);
+//    printTokens(tokens);
+    
+    DatalogCheck checker = DatalogCheck();
+    checker.debugMode = true;
+    bool result = checker.checkGrammar(tokens);
+    
+    std::cout << (result ? "Success!" : "Fail!") << std::endl;
     
     // Free our memory.
     releaseTokens(tokens);
     return 0;
+}
+
+// MARK: - Working with Tokens
+
+/// Prints tokens in the given @c vector.
+void printTokens(const std::vector<Token*>& tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i += 1) {
+        std::cout << tokens.at(i)->toString() << std::endl;
+    }
+    
+    std::cout << "Total Tokens = " << tokens.size() << std::endl;
+}
+
+/// Deletes the pointers in @c tokens and clears the vector.
+void releaseTokens(std::vector<Token*>& tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i += 1) {
+        delete tokens.at(i);
+    }
+    
+    tokens.clear();
 }
 
 // MARK: - Lexing
@@ -145,22 +172,4 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
     tokens.push_back(eof);
     
     return tokens;
-}
-
-/// Prints tokens in the given @c vector.
-void printTokens(const std::vector<Token*>& tokens) {
-    for (unsigned int i = 0; i < tokens.size(); i += 1) {
-        std::cout << tokens.at(i)->toString() << std::endl;
-    }
-    
-    std::cout << "Total Tokens = " << tokens.size() << std::endl;
-}
-
-/// Deletes the pointers in @c tokens and clears the vector.
-void releaseTokens(std::vector<Token*>& tokens) {
-    for (unsigned int i = 0; i < tokens.size(); i += 1) {
-        delete tokens.at(i);
-    }
-    
-    tokens.clear();
 }

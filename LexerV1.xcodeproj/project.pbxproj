@@ -7,28 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		850698E5232AEB44005F1AA9 /* comments.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 850698E4232AEB3E005F1AA9 /* comments.txt */; };
-		850698E7232AEE77005F1AA9 /* strings.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 850698E6232AEE72005F1AA9 /* strings.txt */; };
-		854168BA232C569800BC13D8 /* in10.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B7232C569000BC13D8 /* in10.txt */; };
-		854168BB232C569800BC13D8 /* in11.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168AD232C568E00BC13D8 /* in11.txt */; };
-		854168BC232C569800BC13D8 /* in12.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B6232C569000BC13D8 /* in12.txt */; };
-		854168BD232C569800BC13D8 /* in13.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B2232C568F00BC13D8 /* in13.txt */; };
-		854168BE232C569800BC13D8 /* in14.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168AF232C568F00BC13D8 /* in14.txt */; };
-		854168BF232C569800BC13D8 /* in15.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B3232C569000BC13D8 /* in15.txt */; };
-		854168C0232C569800BC13D8 /* in16.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B8232C569000BC13D8 /* in16.txt */; };
-		854168C1232C569800BC13D8 /* in17.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168AE232C568F00BC13D8 /* in17.txt */; };
-		854168C2232C569800BC13D8 /* in18.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B9232C569000BC13D8 /* in18.txt */; };
-		854168C3232C569800BC13D8 /* in19.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B1232C568F00BC13D8 /* in19.txt */; };
-		854168C4232C569800BC13D8 /* in20.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B0232C568F00BC13D8 /* in20.txt */; };
-		854168C5232C569800BC13D8 /* in61.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B5232C569000BC13D8 /* in61.txt */; };
-		854168C6232C569800BC13D8 /* in62.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 854168B4232C569000BC13D8 /* in62.txt */; };
-		85595AA42328086A001DDD55 /* empty.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85595AA323280860001DDD55 /* empty.txt */; };
+		851784DD23415D5B00FC3211 /* datalog1.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 851784DC23415D3600FC3211 /* datalog1.txt */; };
 		858C239A2329A73700526D23 /* IDRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23982329A73700526D23 /* IDRecognizer.cpp */; };
 		858C239E2329AC1A00526D23 /* StringRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C239C2329AC1A00526D23 /* StringRecognizer.cpp */; };
 		858C23A52329B36700526D23 /* OperatorRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A32329B36700526D23 /* OperatorRecognizer.cpp */; };
 		858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A62329EA9900526D23 /* CommentRecognizer.cpp */; };
 		85D0BCF72327099E00FEE62C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85D0BCF62327099E00FEE62C /* main.cpp */; };
-		85D0BCFF2327135400FEE62C /* datalog1.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85D0BCFD2327132B00FEE62C /* datalog1.txt */; };
+		85D0BCFF2327135400FEE62C /* datalogBad.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85D0BCFD2327132B00FEE62C /* datalogBad.txt */; };
+		85FDB0A7233EAED200A90CC8 /* DatalogCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85FDB0A5233EAED200A90CC8 /* DatalogCheck.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,46 +24,16 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				85D0BCFF2327135400FEE62C /* datalog1.txt in CopyFiles */,
-				850698E5232AEB44005F1AA9 /* comments.txt in CopyFiles */,
-				85595AA42328086A001DDD55 /* empty.txt in CopyFiles */,
-				850698E7232AEE77005F1AA9 /* strings.txt in CopyFiles */,
-				854168BA232C569800BC13D8 /* in10.txt in CopyFiles */,
-				854168BB232C569800BC13D8 /* in11.txt in CopyFiles */,
-				854168BC232C569800BC13D8 /* in12.txt in CopyFiles */,
-				854168BD232C569800BC13D8 /* in13.txt in CopyFiles */,
-				854168BE232C569800BC13D8 /* in14.txt in CopyFiles */,
-				854168BF232C569800BC13D8 /* in15.txt in CopyFiles */,
-				854168C0232C569800BC13D8 /* in16.txt in CopyFiles */,
-				854168C1232C569800BC13D8 /* in17.txt in CopyFiles */,
-				854168C2232C569800BC13D8 /* in18.txt in CopyFiles */,
-				854168C3232C569800BC13D8 /* in19.txt in CopyFiles */,
-				854168C4232C569800BC13D8 /* in20.txt in CopyFiles */,
-				854168C5232C569800BC13D8 /* in61.txt in CopyFiles */,
-				854168C6232C569800BC13D8 /* in62.txt in CopyFiles */,
+				85D0BCFF2327135400FEE62C /* datalogBad.txt in CopyFiles */,
+				851784DD23415D5B00FC3211 /* datalog1.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		850698E4232AEB3E005F1AA9 /* comments.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = comments.txt; sourceTree = "<group>"; };
-		850698E6232AEE72005F1AA9 /* strings.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = strings.txt; sourceTree = "<group>"; };
-		854168AD232C568E00BC13D8 /* in11.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in11.txt; sourceTree = "<group>"; };
-		854168AE232C568F00BC13D8 /* in17.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in17.txt; sourceTree = "<group>"; };
-		854168AF232C568F00BC13D8 /* in14.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in14.txt; sourceTree = "<group>"; };
-		854168B0232C568F00BC13D8 /* in20.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in20.txt; sourceTree = "<group>"; };
-		854168B1232C568F00BC13D8 /* in19.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in19.txt; sourceTree = "<group>"; };
-		854168B2232C568F00BC13D8 /* in13.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in13.txt; sourceTree = "<group>"; };
-		854168B3232C569000BC13D8 /* in15.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in15.txt; sourceTree = "<group>"; };
-		854168B4232C569000BC13D8 /* in62.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in62.txt; sourceTree = "<group>"; };
-		854168B5232C569000BC13D8 /* in61.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in61.txt; sourceTree = "<group>"; };
-		854168B6232C569000BC13D8 /* in12.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in12.txt; sourceTree = "<group>"; };
-		854168B7232C569000BC13D8 /* in10.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in10.txt; sourceTree = "<group>"; };
-		854168B8232C569000BC13D8 /* in16.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in16.txt; sourceTree = "<group>"; };
-		854168B9232C569000BC13D8 /* in18.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in18.txt; sourceTree = "<group>"; };
+		851784DC23415D3600FC3211 /* datalog1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = datalog1.txt; sourceTree = "<group>"; };
 		85595AA223280362001DDD55 /* StandardTokens.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StandardTokens.h; sourceTree = "<group>"; };
-		85595AA323280860001DDD55 /* empty.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = empty.txt; sourceTree = "<group>"; };
 		858C23982329A73700526D23 /* IDRecognizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IDRecognizer.cpp; sourceTree = "<group>"; };
 		858C23992329A73700526D23 /* IDRecognizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IDRecognizer.h; sourceTree = "<group>"; };
 		858C239B2329A80300526D23 /* Token.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Token.h; sourceTree = "<group>"; };
@@ -91,7 +47,9 @@
 		858C23A72329EA9900526D23 /* CommentRecognizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommentRecognizer.h; sourceTree = "<group>"; };
 		85D0BCF32327099E00FEE62C /* LexerV1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LexerV1; sourceTree = BUILT_PRODUCTS_DIR; };
 		85D0BCF62327099E00FEE62C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		85D0BCFD2327132B00FEE62C /* datalog1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = datalog1.txt; sourceTree = "<group>"; };
+		85D0BCFD2327132B00FEE62C /* datalogBad.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = datalogBad.txt; sourceTree = "<group>"; };
+		85FDB0A5233EAED200A90CC8 /* DatalogCheck.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DatalogCheck.cpp; sourceTree = "<group>"; };
+		85FDB0A6233EAED200A90CC8 /* DatalogCheck.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatalogCheck.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,10 +83,28 @@
 			isa = PBXGroup;
 			children = (
 				85D0BD00232714CC00FEE62C /* Samples */,
+				85FDB0A3233EADD500A90CC8 /* Lexer */,
+				85FDB0A4233EAEB500A90CC8 /* Grammar */,
 				85D0BCF62327099E00FEE62C /* main.cpp */,
-				858C23A22329AEFC00526D23 /* Recognizers.h */,
 				85595AA223280362001DDD55 /* StandardTokens.h */,
 				858C239B2329A80300526D23 /* Token.h */,
+			);
+			path = LexerV1;
+			sourceTree = "<group>";
+		};
+		85D0BD00232714CC00FEE62C /* Samples */ = {
+			isa = PBXGroup;
+			children = (
+				851784DC23415D3600FC3211 /* datalog1.txt */,
+				85D0BCFD2327132B00FEE62C /* datalogBad.txt */,
+			);
+			path = Samples;
+			sourceTree = "<group>";
+		};
+		85FDB0A3233EADD500A90CC8 /* Lexer */ = {
+			isa = PBXGroup;
+			children = (
+				858C23A22329AEFC00526D23 /* Recognizers.h */,
 				858C23A02329ACAF00526D23 /* Recognizer.h */,
 				858C23A42329B36700526D23 /* OperatorRecognizer.h */,
 				858C23A32329B36700526D23 /* OperatorRecognizer.cpp */,
@@ -139,31 +115,16 @@
 				858C23A72329EA9900526D23 /* CommentRecognizer.h */,
 				858C23A62329EA9900526D23 /* CommentRecognizer.cpp */,
 			);
-			path = LexerV1;
+			name = Lexer;
 			sourceTree = "<group>";
 		};
-		85D0BD00232714CC00FEE62C /* Samples */ = {
+		85FDB0A4233EAEB500A90CC8 /* Grammar */ = {
 			isa = PBXGroup;
 			children = (
-				85D0BCFD2327132B00FEE62C /* datalog1.txt */,
-				850698E4232AEB3E005F1AA9 /* comments.txt */,
-				85595AA323280860001DDD55 /* empty.txt */,
-				850698E6232AEE72005F1AA9 /* strings.txt */,
-				854168B7232C569000BC13D8 /* in10.txt */,
-				854168AD232C568E00BC13D8 /* in11.txt */,
-				854168B6232C569000BC13D8 /* in12.txt */,
-				854168B2232C568F00BC13D8 /* in13.txt */,
-				854168AF232C568F00BC13D8 /* in14.txt */,
-				854168B3232C569000BC13D8 /* in15.txt */,
-				854168B8232C569000BC13D8 /* in16.txt */,
-				854168AE232C568F00BC13D8 /* in17.txt */,
-				854168B9232C569000BC13D8 /* in18.txt */,
-				854168B1232C568F00BC13D8 /* in19.txt */,
-				854168B0232C568F00BC13D8 /* in20.txt */,
-				854168B5232C569000BC13D8 /* in61.txt */,
-				854168B4232C569000BC13D8 /* in62.txt */,
+				85FDB0A6233EAED200A90CC8 /* DatalogCheck.h */,
+				85FDB0A5233EAED200A90CC8 /* DatalogCheck.cpp */,
 			);
-			path = Samples;
+			name = Grammar;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -224,6 +185,7 @@
 			files = (
 				858C23A52329B36700526D23 /* OperatorRecognizer.cpp in Sources */,
 				858C239E2329AC1A00526D23 /* StringRecognizer.cpp in Sources */,
+				85FDB0A7233EAED200A90CC8 /* DatalogCheck.cpp in Sources */,
 				858C239A2329A73700526D23 /* IDRecognizer.cpp in Sources */,
 				858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */,
 				85D0BCF72327099E00FEE62C /* main.cpp in Sources */,

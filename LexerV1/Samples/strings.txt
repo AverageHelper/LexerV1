@@ -1,7 +1,0 @@
-'this is a string'
-'this is also a
-string'
-not
-''
-'this one doesn''t have an apostrophie'
-'this is invalid

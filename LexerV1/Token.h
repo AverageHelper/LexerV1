@@ -17,7 +17,7 @@ private:
     std::string value;
     int lineNum;
     
-    std::string typeString() {
+    std::string typeString() const {
         switch (type) {
             case COMMA: return "COMMA";
             case PERIOD: return "PERIOD";
@@ -42,8 +42,20 @@ private:
     }
     
 public:
+    TokenType getType() const {
+        return this->type;
+    }
+    
+    std::string getValue() const {
+        return this->value;
+    }
+    
+    int getLineNum() const {
+        return this->lineNum;
+    }
+    
     /// Returns a string describing the receiver in the form @c (type,"value",line).
-    std::string toString() {
+    std::string toString() const {
         return "("
                 + typeString() + ","
                 + "\"" + value + "\","
@@ -53,6 +65,18 @@ public:
     
     void setLineNum(const int lineNum) {
         this->lineNum = lineNum;
+    }
+    
+    Token() {
+        this->type = UNDEFINED;
+        this->value = "";
+        this->lineNum = 0;
+    }
+    
+    Token(const Token &other) {
+        this->type = other.type;
+        this->value = other.value;
+        this->lineNum = other.lineNum;
     }
     
     Token(const TokenType type,
