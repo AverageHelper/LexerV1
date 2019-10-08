@@ -1,5 +1,5 @@
 Schemes:
-    snap(S,N,A,P)
+    snap(S,N,A,P) 
     NameHasID(N,S)
  
 Facts:
@@ -11,3 +11,5 @@ Rules:
  
 Queries:
     NameHasID('Snoopy',Id)?
+ 
+

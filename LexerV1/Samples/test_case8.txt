@@ -1,0 +1,22 @@
+# For use ONLY during the Fall 2019 semester
+# Copyright Cory Barker, Brigham Young University, August 2019
+
+# passoffInput29     FAILURE RightParen,23
+# Testing for no IDs in facts.
+Schemes:
+
+exprTest( e )
+deathTest( d , t )
+
+Facts:
+
+cool('eat','lots of',SPAM).
+
+Rules:
+
+deathTest(SPAM) :- exprTest
+                         ( E ).
+
+Queries:
+
+deathTest( a , b )?

@@ -13,46 +13,50 @@
 #include <sstream>
 #include <exception>
 #include <vector>
-#include "Token.h"
+#include "Production.h"
+#include "DatalogProgram.h"
+#include "Rule.h"
 
 class DatalogCheck {
 public:
-    bool debugMode = false;
-    bool checkGrammar(const std::vector<Token *> &tokens);
+    bool debugLogging = false;
+    DatalogProgram* checkGrammar(const std::vector<Token *> &tokens);
     
 private:
+    std::string currentNonTerminal = "";
+    
     /// Returns @c true if the token's type matches one of the given @c expectedTypes. Throws an exception otherwise.
-    bool checkType(const Token* token, const std::vector<TokenType> expectedTypes);
+    Token* checkType(Token* token, const std::vector<TokenType> expectedTypes);
     
     /// Returns @c true if the token's type matches the given @c expectedType. Throws an exception otherwise.
-    bool checkType(const Token* token, const TokenType expectedType);
+    Token* checkType(Token* token, const TokenType expectedType);
     
     /// Returns @c true if the token's type matches the given @c expectedType. @c false otherwise.
     bool peekType(const Token* token, const TokenType expectedType);
     
-    bool datalogProgram(const std::vector<Token *> &tokens, int &index);
+    DatalogProgram* datalogProgram(const std::vector<Token *> &tokens, int &index);
     
-    bool schemeList(const std::vector<Token *> &tokens, int &index);
-    bool factList(const std::vector<Token *> &tokens, int &index);
-    bool ruleList(const std::vector<Token *> &tokens, int &index);
-    bool queryList(const std::vector<Token *> &tokens, int &index);
+    std::vector<Predicate*> schemeList(std::vector<Predicate*> &schemeList, const std::vector<Token *> &tokens, int &index);
+    std::vector<Predicate*> factList(std::vector<Predicate*> &factList, const std::vector<Token *> &tokens, int &index);
+    std::vector<Rule*> ruleList(std::vector<Rule*> &ruleList, const std::vector<Token *> &tokens, int &index);
+    std::vector<Predicate*> queryList(std::vector<Predicate*> &queryList, const std::vector<Token *> &tokens, int &index);
     
-    bool scheme(const std::vector<Token *> &tokens, int &index);
-    bool fact(const std::vector<Token *> &tokens, int &index);
-    bool rule(const std::vector<Token *> &tokens, int &index);
-    bool query(const std::vector<Token *> &tokens, int &index);
+    Predicate* scheme(const std::vector<Token *> &tokens, int &index);
+    Predicate* fact(const std::vector<Token *> &tokens, int &index);
+    Rule* rule(const std::vector<Token *> &tokens, int &index);
+    Predicate* query(const std::vector<Token *> &tokens, int &index);
     
-    bool headPredicate(const std::vector<Token *> &tokens, int &index);
-    bool predicate(const std::vector<Token *> &tokens, int &index);
+    Predicate* headPredicate(const std::vector<Token *> &tokens, int &index);
+    Predicate* predicate(const std::vector<Token *> &tokens, int &index);
     
-    bool predicateList(const std::vector<Token *> &tokens, int &index);
-    bool parameterList(const std::vector<Token *> &tokens, int &index);
-    bool stringList(const std::vector<Token *> &tokens, int &index);
-    bool idList(const std::vector<Token *> &tokens, int &index);
+    std::vector<Predicate*> predicateList(const std::vector<Predicate*> &foundPredicates, const std::vector<Token *> &tokens, int &index);
+    std::vector<std::string> parameterList(const std::vector<std::string> &foundParams, const std::vector<Token *> &tokens, int &index);
+    std::vector<std::string> stringList(const std::vector<std::string> &foundStrings, const std::vector<Token *> &tokens, int &index);
+    std::vector<std::string> idList(const std::vector<std::string> &foundIDs, const std::vector<Token *> &tokens, int &index);
     
-    bool parameter(const std::vector<Token *> &tokens, int &index);
-    bool expression(const std::vector<Token *> &tokens, int &index);
-    bool op(const std::vector<Token *> &tokens, int &index);
+    std::string parameter(const std::vector<Token *> &tokens, int &index);
+    std::string expression(const std::vector<Token *> &tokens, int &index);
+    std::string op(const std::vector<Token *> &tokens, int &index);
 };
 
 #endif /* DatalogCheck_h */

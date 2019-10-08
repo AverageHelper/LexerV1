@@ -17,8 +17,9 @@ void releaseTokens(std::vector<Token*>& tokens);
 
 int main(int argc, char* argv[]) {
     std::string filename = "";
+    bool uiLogging = (argc <= 1);
     
-    if (argc <= 1) {
+    if (uiLogging) {
         // If user didn't send anything in command line, ask for input.
         std::cout << "=== Welcome to RoLexer (V1) ===" << std::endl;
         std::cout << "Enter the name of a file to tokenize (include extension): ";
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
     // Open user file
     iFS.open(filename);
     while (!iFS.is_open()) {
-        if (argc <= 1) {
+        if (uiLogging) {
             // Try again if user's filename didn't work.
             std::cout << "The file '" << filename
                 << "' could not be opened. Enter another filename: ";
@@ -55,10 +56,18 @@ int main(int argc, char* argv[]) {
 //    printTokens(tokens);
     
     DatalogCheck checker = DatalogCheck();
-    checker.debugMode = true;
-    bool result = checker.checkGrammar(tokens);
+    checker.debugLogging = true;
     
-    std::cout << (result ? "Success!" : "Fail!") << std::endl;
+    DatalogProgram* result = nullptr;
+    result = checker.checkGrammar(tokens);
+    
+    if (result != nullptr) {
+        std::cout << result->toString() << std::endl;
+    }
+    
+    if (result != nullptr) {
+        delete result;
+    }
     
     // Free our memory.
     releaseTokens(tokens);

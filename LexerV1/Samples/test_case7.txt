@@ -1,0 +1,8 @@
+# For use ONLY during the Fall 2019 semester
+# Copyright Cory Barker, Brigham Young University, August 2019
+
+# passoffInput28     FAILURE Facts,3
+Schemes:
+Facts:
+Rules:
+Queries:
