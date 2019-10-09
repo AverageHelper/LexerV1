@@ -19,6 +19,7 @@ class Production {
 public:
     /// Returns a string representation of the receiver.
     virtual std::string toString() = 0;
+    virtual ~Production() {};
 };
 
 #endif /* Production_h */
