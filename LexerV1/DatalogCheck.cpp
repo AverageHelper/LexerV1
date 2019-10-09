@@ -53,7 +53,7 @@ DatalogProgram* DatalogCheck::checkGrammar(const std::vector<Token *> &tokens) {
     } catch (WrongToken& e) {
         if (debugLogging) {
             std::cout << "Failure!" << std::endl << "  ";
-            std::cout << e.getToken().toString() << std::endl;
+            std::cout << e.getToken().toString();
         }
     }
     
@@ -113,6 +113,9 @@ DatalogProgram* DatalogCheck::datalogProgram(const std::vector<Token *> &tokens,
     std::vector<Predicate*> schemes = schemeList(schemeStart, tokens, index);
     
     if (checkType(tokens.at(index + 0), FACTS) != nullptr) {
+        if (schemes.empty()) {
+            throw WrongToken(*tokens.at(index + 0));
+        }
         index += 1;
     }
     
@@ -328,11 +331,12 @@ Rule* DatalogCheck::rule(const std::vector<Token *> &tokens,
     }
     
     std::vector<Predicate*> predicates = {};
-    Predicate* thisPred = predicate(tokens, index);
-    thisPred->setType(RULES);
-    predicates.push_back(thisPred);
-    
+    predicates.push_back(predicate(tokens, index));
     predicates = predicateList(predicates, tokens, index);
+    
+    for (unsigned int i = 0; i < predicates.size(); i += 1) {
+        predicates.at(i)->setType(RULES);
+    }
     
     if (checkType(tokens.at(index + 0), PERIOD)) {
         index += 1;
@@ -599,7 +603,7 @@ std::string DatalogCheck::expression(const std::vector<Token *> &tokens,
         }
 //    }
     
-    return result;
+    return "(" + result + ")";
 }
 
 std::string DatalogCheck::op(const std::vector<Token *> &tokens, int &index) {
