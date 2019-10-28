@@ -36,7 +36,7 @@
 }
 
 
-// MARK: Utility
+// MARK: - Utility
 
 - (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
     NSString *path = [NSString stringWithCString:__FILE__ encoding:NSUTF8StringEncoding];
@@ -65,7 +65,7 @@
     return answerKey;
 }
 
-- (NSString *)getDiffBetweenFileAtPath:(NSString *)path1 andPath:(NSString *)path2 {
+- (nonnull NSString *)getDiffBetweenFileAtPath:(nonnull NSString *)path1 andPath:(nonnull NSString *)path2 {
     NSTask *diffTask = [[NSTask alloc] init];
     [diffTask setCurrentDirectoryPath:@"~"];
     [diffTask setLaunchPath:@"/usr/bin/diff"];
@@ -105,7 +105,7 @@
 
 
 /// Returns the path of a test file with the given @c name from the given @c domain.
-- (NSString *)filePathForTestFileNamed:(NSString *)testName inDomain:(NSString *)testDomain {
+- (nonnull NSString *)filePathForTestFileNamed:(nonnull NSString *)testName inDomain:(nonnull NSString *)testDomain {
     NSString *path = [self testFilesPathInDomain:testDomain];    // ex: "100 Bucket"
     path = [path stringByAppendingPathComponent:testName];  // ex: "answer1"
     path = [path stringByAppendingPathExtension:@"txt"];
@@ -113,27 +113,7 @@
     return path;
 }
 
-/// Checks that the given program output matches the TA's outfile example.
-- (bool)output:(NSString *)output passesTest:(NSString *)testID withSolutionPrefix:(NSString *)prefix inDomain:(NSString *)testDomain {
-    NSString *answerDocName = [prefix stringByAppendingString:testID];
-    
-    NSString *path = [self filePathForTestFileNamed:answerDocName inDomain:testDomain];
-    NSLog(@"Path to answer key: %@", path);
-    
-    NSString* answerKey = [self contentsOfFileAtPath:path];
-    
-    bool areIdentical = [output isEqualToString:answerKey];
-    
-    if (!areIdentical) {
-        NSLog(@"key: \n%@\nEOF\n", answerKey);
-        NSLog(@"output: \n%@\nEOF\n", output);
-    }
-    
-    return areIdentical;
-}
-
-
-- (std::ifstream)openInputStreamForTestNamed:(NSString *)testName inDomain:(NSString *)domain {
+- (std::ifstream)openInputStreamForTestNamed:(nonnull NSString *)testName inDomain:(nonnull NSString *)domain {
     NSString *path = [self testFilesPathInDomain:domain];
     path = [path stringByAppendingPathComponent:testName];  // ex: "in10"
     path = [path stringByAppendingPathExtension:@"txt"];
@@ -149,37 +129,6 @@
     return iFS;
 }
 
-
-
-- (void)testOutputCheck {
-    NSString *basicOutput11 = @"(COMMENT,\"# undefined character\",3)\n"
-                                "(UNDEFINED,\"@\",5)\n"
-                                "(EOF,\"\",8)\n"
-                                "Total Tokens = 3";
-    
-    bool result1 = [self output:basicOutput11 passesTest:@"11" withSolutionPrefix:@"out" inDomain:@"Basic Tests"];
-    XCTAssert(result1);
-    
-    NSString *bigAnswer2 =
-    @"(COMMENT,\"# For use ONLY during the Fall 2019 semester\",1)\n"
-    "(COMMENT,\"# Copyright Cory Barker, Brigham Young University, August 2019\",2)\n"
-    "(UNDEFINED,\"#|\n"
-    "\n"
-    "############################################################\n"
-    "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n"
-    "############################################################\n"
-    "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n"
-    "\n"
-    "#|\n"
-    "\n"
-    "#\n"
-    "\",5)\n"
-    "(EOF,\"\",15)\n"
-    "Total Tokens = 4";
-    
-    bool result2 = [self output:bigAnswer2 passesTest:@"2" withSolutionPrefix:@"answer" inDomain:@"100 Bucket"];
-    XCTAssert(result2);
-}
 
 
 // MARK: - Lexer Output
@@ -224,7 +173,7 @@
     return tmp;
 }
 
-- (nullable NSURL *)writeStringToWorkingDirectory:(NSString *)string {
+- (nullable NSURL *)writeStringToWorkingDirectory:(nonnull NSString *)string {
     if (self.workingURL == nil) {
         NSLog(@"Unprepared with working URL.");
         return nil;
@@ -242,14 +191,14 @@
 }
 
 
-// MARK: - Lexer Tests
+// MARK: - Major Tests
 
-- (void)runLexerOnInputFile:(int)fileNum withPrefix:(NSString *)prefix inDomain:(NSString *)fileDomain {
+- (void)runLexerOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
     NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
     [self runLexerOnInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
 }
 
-- (void)runLexerOnInputFileNamed:(NSString *)testID withPrefix:(NSString *)prefix inDomain:(NSString *)fileDomain {
+- (void)runLexerOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
     NSString *testName = [prefix stringByAppendingString:testID];
     
     std::ifstream iFS = [self openInputStreamForTestNamed:testName inDomain:fileDomain];
@@ -328,6 +277,125 @@
     [self measureBlock:^{
         [self runLexerOnInputFile:1 withPrefix:@"test_case" inDomain:@"100 Bucket"];
     }];
+}
+
+// MARK: Minor Tests
+
+- (void)testIdentifiers {
+    std::istringstream input = std::istringstream("three identifiers here WithSomeWe1rdValu3s");
+    while (!input.eof()) {
+        if (input.peek() == ' ') {
+            input.ignore();
+        }
+        Token* result = IDRecognizer().recognizeTokenInStream(input);
+        XCTAssert(result->getType() == ID,
+                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        delete result;
+    }
+    
+    input.str("0this 9is _invalid for_a_string");
+    while (!input.eof()) {
+        if (input.peek() == ' ') {
+            input.ignore();
+        }
+        Token* result = IDRecognizer().recognizeTokenInStream(input);
+        XCTAssert(result->getType() == UNDEFINED,
+                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        delete result;
+    }
+}
+
+- (void)testStrings {
+    std::istringstream input =
+        std::istringstream("'these' 'should ' ' all' 'be' 'SWwfet tein wer ' 'It''s dead, Jim!'");
+    NSMutableArray *validStrings = [NSMutableArray array];
+    
+    while (!input.eof()) {
+        Token* result = StringRecognizer(nullptr).recognizeTokenInStream(input);
+        
+        // Ignore undefined single-space tokens
+        if (result->getType() == UNDEFINED &&
+            result->getValue() == " ") {
+            delete result;
+            continue;
+        }
+        XCTAssertEqual(result->getType(), STRING,
+                       @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        if (result->getType() == STRING) {
+            NSString *value = [NSString stringWithCString:result->getValue().c_str() encoding:NSUTF8StringEncoding];
+            [validStrings addObject:value];
+        } else {
+            NSLog(@"Incorrect token type: %s", result->toString().c_str());
+        }
+        delete result;
+    }
+    
+    NSMutableString *joinedResults = [NSMutableString string];
+    for (NSString *result in validStrings) {
+        [joinedResults appendString:result];
+        [joinedResults appendString:@"\n"];
+    }
+    
+    XCTAssertEqual(validStrings.count, 6, "%@", joinedResults);
+    
+    
+    input.str("invalid strings ");
+    while (!input.eof()) {
+        if (input.peek() == ' ') {
+            input.ignore();
+        }
+        Token* result = StringRecognizer(nullptr).recognizeTokenInStream(input);
+        XCTAssert(result->getType() == UNDEFINED,
+                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        delete result;
+    }
+}
+
+- (void)testComments {
+    std::istringstream input =
+        std::istringstream("#| comment |# #||# # all of the comments");
+    NSMutableArray *validComments = [NSMutableArray array];
+    
+    while (!input.eof()) {
+        Token* result = CommentRecognizer(nullptr).recognizeTokenInStream(input);
+        
+        // Ignore undefined single-space tokens
+        if (result->getType() == UNDEFINED &&
+            result->getValue() == " ") {
+            delete result;
+            continue;
+        }
+        
+        XCTAssertEqual(result->getType(), COMMENT,
+                       @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        if (result->getType() == COMMENT) {
+            NSString *value = [NSString stringWithCString:result->getValue().c_str() encoding:NSUTF8StringEncoding];
+            [validComments addObject:value];
+        } else {
+            NSLog(@"Incorrect token type: %s", result->toString().c_str());
+        }
+        delete result;
+    }
+    
+    NSMutableString *joinedResults = [NSMutableString string];
+    for (NSString *result in validComments) {
+        [joinedResults appendString:result];
+        [joinedResults appendString:@"\n"];
+    }
+    
+    XCTAssertEqual(validComments.count, 3, "%@", joinedResults);
+    
+    
+    input.str("invalid comments #|are here");
+    while (!input.eof()) {
+        if (input.peek() == ' ') {
+            input.ignore();
+        }
+        Token* result = CommentRecognizer(nullptr).recognizeTokenInStream(input);
+        XCTAssert(result->getType() == UNDEFINED,
+                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
+        delete result;
+    }
 }
 
 @end

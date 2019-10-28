@@ -41,28 +41,33 @@ Token* StringRecognizer::recognizeTokenInStream(std::istream& stream) {
         buffer.append(std::string(1, thisChar));
         
         if (thisChar == '\n' && lineNum != nullptr) {
+            // Handle line count
             (*lineNum) += 1;
             continue;
         }
         
-        if (next == EOF) {
-            state = 4;
+        if (buffer.size() > 1 && state == 1 && thisChar == '\'') {
+            // Listen now for next ' for whether terminator or apostrophe
+            state = 2;
+        }
+        
+        if (state == 2 && next == '\'') {
+            // Apostrophe: move along
+            buffer.append(std::string(1, stream.get()));
+            state = 1;
+            
+        } else if (state == 2) {
+            // Terminator
+            state = 3;
             appliedToken = applyState();
             if (appliedToken != nullptr) {
                 return appliedToken;
             }
         }
         
-        if (buffer.size() > 1 && state == 1 && thisChar == '\'') {
-            state = 2;
-        }
-        
-        if (state == 2 && next == '\'') {
-            buffer.append(std::string(1, stream.get()));
-            state = 1;
-            
-        } else if (state == 2) {
-            state = 3;
+        if (next == EOF) {
+            // Shouldn't see EOF before terminator
+            state = 4;
             appliedToken = applyState();
             if (appliedToken != nullptr) {
                 return appliedToken;

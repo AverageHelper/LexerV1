@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
     iFS.close();
     
 //    printTokens(tokens);
+//    releaseTokens(tokens);
 //    return 0;
     
     DatalogCheck checker = DatalogCheck();
