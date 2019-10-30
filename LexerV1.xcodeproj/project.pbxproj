@@ -11,6 +11,7 @@
 		856F2ACF2368847B00BE23F7 /* DatalogProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */; };
 		856F2AD02368847B00BE23F7 /* Rule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E92342C157002BBB2B /* Rule.cpp */; };
 		856F2AD12368847B00BE23F7 /* Predicate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3EC2342C175002BBB2B /* Predicate.cpp */; };
+		856F2B002369EA3100BE23F7 /* TestUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 856F2AFF2369EA3100BE23F7 /* TestUtils.m */; };
 		858C239A2329A73700526D23 /* IDRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23982329A73700526D23 /* IDRecognizer.cpp */; };
 		858C239E2329AC1A00526D23 /* StringRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C239C2329AC1A00526D23 /* StringRecognizer.cpp */; };
 		858C23A52329B36700526D23 /* OperatorRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A32329B36700526D23 /* OperatorRecognizer.cpp */; };
@@ -89,6 +90,8 @@
 		856F2AFB2369E0FF00BE23F7 /* answer0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = answer0.txt; sourceTree = "<group>"; };
 		856F2AFC2369E0FF00BE23F7 /* answer1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = answer1.txt; sourceTree = "<group>"; };
 		856F2AFD2369E0FF00BE23F7 /* test_case1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = test_case1.txt; sourceTree = "<group>"; };
+		856F2AFE2369EA3100BE23F7 /* TestUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestUtils.h; sourceTree = "<group>"; };
+		856F2AFF2369EA3100BE23F7 /* TestUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestUtils.m; sourceTree = "<group>"; };
 		858C23982329A73700526D23 /* IDRecognizer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = IDRecognizer.cpp; sourceTree = "<group>"; };
 		858C23992329A73700526D23 /* IDRecognizer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IDRecognizer.h; sourceTree = "<group>"; };
 		858C239B2329A80300526D23 /* Token.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Token.h; sourceTree = "<group>"; };
@@ -297,6 +300,8 @@
 			isa = PBXGroup;
 			children = (
 				856F2ACD2368805700BE23F7 /* LexerV1.h */,
+				856F2AFE2369EA3100BE23F7 /* TestUtils.h */,
+				856F2AFF2369EA3100BE23F7 /* TestUtils.m */,
 				85F946DF2363BAAC006C460E /* Lexer Test Files */,
 				8548AA112367680F00D49AA3 /* Grammar Test Files */,
 				85F946E02363BACD006C460E /* TestLexer.mm */,
@@ -541,6 +546,7 @@
 				85F947522363D009006C460E /* OperatorRecognizer.cpp in Sources */,
 				85F947532363D009006C460E /* IDRecognizer.cpp in Sources */,
 				85F947542363D009006C460E /* StringRecognizer.cpp in Sources */,
+				856F2B002369EA3100BE23F7 /* TestUtils.m in Sources */,
 				85F947552363D009006C460E /* CommentRecognizer.cpp in Sources */,
 				85F946E12363BACD006C460E /* TestLexer.mm in Sources */,
 				85F946D92363B6D3006C460E /* TestGrammar.mm in Sources */,

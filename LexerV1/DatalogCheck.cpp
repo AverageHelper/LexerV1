@@ -31,6 +31,10 @@ public:
     
 };
 
+std::string DatalogCheck::getResultMsg() {
+    return this->resultMsg;
+}
+
 DatalogProgram* DatalogCheck::checkGrammar(const std::vector<Token *> &tokens) {
     int start = 0;
     DatalogProgram* result = nullptr;
@@ -43,23 +47,19 @@ DatalogProgram* DatalogCheck::checkGrammar(const std::vector<Token *> &tokens) {
     }
     
     if (cleanTokens.empty()) {
-        std::cout << "Failure!" << std::endl;
+        resultMsg = "Failure!\n";
         return result;
     }
     
     try {
         currentNonTerminal = "";
         result = datalogProgram(cleanTokens, start);
-        if (debugLogging) {
-            std::cout << "Success!" << std::endl;
-        }
+        this->resultMsg = "Success!\n" + result->toString();
         currentNonTerminal = "";
         
     } catch (WrongToken& e) {
-        if (debugLogging) {
-            std::cout << "Failure!" << std::endl << "  ";
-            std::cout << e.getToken().toString();
-        }
+        this->resultMsg = "Failure!\n  ";
+        this->resultMsg += e.getToken().toString();
     }
     
     return result;

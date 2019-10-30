@@ -23,86 +23,28 @@
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    self.workingURL = [self workingOutputFileURL];
+    NSString *fileName = [NSString stringWithCString:__FILE_NAME__ encoding:NSUTF8StringEncoding];
+    self.workingURL = [TestUtils workingOutputFileURLForTestFileNamed:fileName];
 }
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     if (self.workingURL != nil) {
-        [self destroyWorkingOutputFileAt:self.workingURL];
+        bool success = [TestUtils destroyFileAt:self.workingURL];
+        XCTAssert(success, "Failed to clean up working directory at path %@", self.workingURL.path);
     }
 }
 
 // MARK: - Utility
 
 - (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
-    NSString *path = [NSString stringWithCString:__FILE__ encoding:NSUTF8StringEncoding];
-    path = [path stringByDeletingLastPathComponent];
-    path = [path stringByAppendingPathComponent:@"Grammar Test Files"];
-    
-    if (testDomain != nil) {
-        path = [path stringByAppendingPathComponent:testDomain];
-    }
-    
-    return path;
-}
-
-- (nullable NSString *)contentsOfFileAtPath:(nonnull NSString *)path {
-    NSError *error;
-    
-    NSString* answerKey =
-        [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
-    
-    XCTAssert(error == nil, @"File read error");
-    if (error != nil) {
-        NSLog(@"\n\n**File read error**\nFile path: %@", path);
-        NSLog(@"Error %@", error);
-    }
-    
-    return answerKey;
-}
-
-- (nonnull NSString *)getDiffBetweenFileAtPath:(nonnull NSString *)path1 andPath:(nonnull NSString *)path2 {
-    NSTask *diffTask = [[NSTask alloc] init];
-    [diffTask setCurrentDirectoryPath:@"~"];
-    [diffTask setLaunchPath:@"/usr/bin/diff"];
-    [diffTask setArguments:[NSArray arrayWithObjects:path1, path2, nil]];
-    
-    NSPipe *output = [NSPipe pipe];
-    if (output == nil) {
-        NSLog(@"Failed to create output pipe for diff command.");
-        return @"Failed to create output pipe for diff command.";
-    }
-    
-    [diffTask setStandardOutput:output];
-    
-    NSError *launchError;
-    [diffTask launchAndReturnError:&launchError];
-    if (launchError != nil) {
-        NSLog(@"Diff command failed with error: %@", launchError);
-        return [NSString stringWithFormat:@"%@", launchError];
-    }
-    
-    NSError *readError;
-    NSData *diffResult = [[output fileHandleForReading] readDataToEndOfFileAndReturnError:&readError];
-    
-    if (readError != nil) {
-        NSLog(@"Diff output read failed with error: %@", readError);
-        return [NSString stringWithFormat:@"%@", readError];
-    }
-    
-    NSString *diff = [[NSString alloc] initWithData:diffResult encoding:NSUTF8StringEncoding];
-    if (diff == nil) {
-        NSLog(@"Diff output was unreadable in UTF8 encoding.");
-        return @"Diff output was unreadable in UTF8 encoding.";
-    }
-    
-    return diff;
+    return [TestUtils testFilesPathWithFolder:@"Grammar Test Files" inDomain:testDomain];
 }
 
 
 /// Returns the path of a test file with the given @c name from the given @c domain.
-- (nonnull NSString *)filePathForTestFileNamed:(nonnull NSString *)testName inDomain:(nonnull NSString *)testDomain {
+- (nonnull NSString *)filePathForTestFileNamed:(nonnull NSString *)testName
+                                      inDomain:(nonnull NSString *)testDomain {
     NSString *path = [self testFilesPathInDomain:testDomain];    // ex: "100 Bucket"
     path = [path stringByAppendingPathComponent:testName];  // ex: "answer1"
     path = [path stringByAppendingPathExtension:@"txt"];
@@ -110,7 +52,8 @@
     return path;
 }
 
-- (std::ifstream)openInputStreamForTestNamed:(nonnull NSString *)testName inDomain:(nonnull NSString *)domain {
+- (std::ifstream)openInputStreamForTestNamed:(nonnull NSString *)testName
+                                    inDomain:(nonnull NSString *)domain {
     NSString *path = [self testFilesPathInDomain:domain];
     path = [path stringByAppendingPathComponent:testName];  // ex: "in10"
     path = [path stringByAppendingPathExtension:@"txt"];
@@ -130,49 +73,10 @@
 
 // MARK: - Grammar Output
 
-- (void)destroyWorkingOutputFileAt:(nonnull NSURL *)fileURL {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    NSError *deleteError;
-    bool success = [fileManager removeItemAtURL:fileURL error:&deleteError];
-    
-    if (!success || deleteError != nil) {
-        NSLog(@"Failed to remove directory at path %@", fileURL.path);
-        XCTAssert(false, "Failed to clean up working directory at path %@", fileURL.path);
-    }
-}
-
-- (nullable NSURL *)workingOutputFileURL {
-    NSUUID *operationID = [NSUUID UUID];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSURL *tmp = [fileManager temporaryDirectory];
-    // ...tmp/TestLexer
-    NSString *fileName = [NSString stringWithCString:__FILE_NAME__ encoding:NSUTF8StringEncoding];
-    fileName = [fileName stringByDeletingPathExtension];
-    tmp = [tmp URLByAppendingPathComponent:fileName isDirectory:YES];
-    
-    NSError *folderCreateError;
-    [fileManager createDirectoryAtURL:tmp withIntermediateDirectories:YES attributes:nil error:&folderCreateError];
-    if (folderCreateError != nil) {
-        NSLog(@"Failed to create output directory at path %@", tmp.path);
-        return nil;
-    }
-    // ...tmp/TestLexer/<UUID>
-    tmp = [tmp URLByAppendingPathComponent:operationID.UUIDString isDirectory:false];
-    tmp = [tmp URLByAppendingPathExtension:@"txt"];
-    
-    bool result = [fileManager createFileAtPath:tmp.path contents:nil attributes:nil];
-    if (!result) {
-        NSLog(@"Failed to create file at path %@", tmp.path);
-        return nil;
-    }
-    
-    return tmp;
-}
-
 - (nullable NSURL *)writeStringToWorkingDirectory:(nonnull NSString *)string {
     if (self.workingURL == nil) {
         NSLog(@"Unprepared with working URL.");
+        XCTAssert(false, "Unprepared with working URL.");
         return nil;
     }
     
@@ -196,12 +100,16 @@
     }
 }
 
-- (std::vector<Token*>)tokensFromInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+- (std::vector<Token*>)tokensFromInputFile:(int)fileNum
+                                withPrefix:(nonnull NSString *)prefix
+                                  inDomain:(nonnull NSString *)fileDomain {
     NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
     return [self tokensFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
 }
 
-- (std::vector<Token*>)tokensFromInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+- (std::vector<Token*>)tokensFromInputFileNamed:(nonnull NSString *)testID
+                                     withPrefix:(nonnull NSString *)prefix
+                                       inDomain:(nonnull NSString *)fileDomain {
     NSString *testName = [prefix stringByAppendingString:testID];
     
     std::ifstream iFS = [self openInputStreamForTestNamed:testName inDomain:fileDomain];
@@ -214,14 +122,19 @@
     return tokens;
 }
 
-- (void)runDatalogOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+- (void)runDatalogOnInputFile:(int)fileNum
+                   withPrefix:(nonnull NSString *)prefix
+                     inDomain:(nonnull NSString *)fileDomain {
     return [self runDatalogOnInputFile:fileNum
                             withPrefix:prefix
                               inDomain:fileDomain
                          expectSuccess:true];
 }
 
-- (void)runDatalogOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain expectSuccess:(bool)expectSuccess {
+- (void)runDatalogOnInputFile:(int)fileNum
+                   withPrefix:(nonnull NSString *)prefix
+                     inDomain:(nonnull NSString *)fileDomain
+                expectSuccess:(bool)expectSuccess {
     NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
     return [self runDatalogOnInputFileNamed:testID
                                  withPrefix:prefix
@@ -229,14 +142,19 @@
                               expectSuccess:expectSuccess];
 }
 
-- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID
+                        withPrefix:(nonnull NSString *)prefix
+                          inDomain:(nonnull NSString *)fileDomain {
     return [self runDatalogOnInputFileNamed:testID
                                  withPrefix:prefix
                                    inDomain:fileDomain
                               expectSuccess:true];
 }
 
-- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain expectSuccess:(bool)expectSuccess {
+- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID
+                        withPrefix:(nonnull NSString *)prefix
+                          inDomain:(nonnull NSString *)fileDomain
+                     expectSuccess:(bool)expectSuccess {
     std::vector<Token*> tokens = [self tokensFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
     
     if (tokens.empty()) {
@@ -245,7 +163,6 @@
     }
     
     DatalogCheck checker = DatalogCheck();
-    checker.debugLogging = true;
     DatalogProgram* result = nullptr;
     result = checker.checkGrammar(tokens);
     
@@ -262,9 +179,7 @@
     }
     
     // Write output
-    NSString *resultString = [NSString stringWithCString:result->toString().c_str() encoding:NSUTF8StringEncoding];
-    // FIXME: This is fake. Need somehow to get program output, or rewrite program to deliver output differently.
-    resultString = [@"Success!\n" stringByAppendingString:resultString];
+    NSString *resultString = [NSString stringWithCString:checker.getResultMsg().c_str() encoding:NSUTF8StringEncoding];
     resultString = [resultString stringByAppendingString:@"\n"];
     NSURL *testResult = [self writeStringToWorkingDirectory:resultString];
     if (testResult == nil) {
@@ -285,7 +200,7 @@
     
     NSString *answerFileName = [answerPrefix stringByAppendingString:testID];
     NSString *answerKey = [self filePathForTestFileNamed:answerFileName inDomain:fileDomain];
-    NSString *diff = [self getDiffBetweenFileAtPath:testResult.path andPath:answerKey];
+    NSString *diff = [TestUtils getDiffBetweenFileAtPath:testResult.path andPath:answerKey];
     
     // Make sure diff comes out empty
     bool success = [diff isEqualToString:@"\n"] || [diff isEqualToString:@""];

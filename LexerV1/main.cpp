@@ -54,19 +54,14 @@ int main(int argc, char* argv[]) {
 //    return 0;
     
     DatalogCheck checker = DatalogCheck();
-    checker.debugLogging = true;
-
-    DatalogProgram* result = nullptr;
-    result = checker.checkGrammar(tokens);
-
-    if (result != nullptr) {
-        std::cout << result->toString() << std::endl;
-    }
-
+    DatalogProgram* result = checker.checkGrammar(tokens);
+    
+    std::cout << checker.getResultMsg() << std::endl;
+    
     if (result != nullptr) {
         delete result;
     }
-
+    
     // Free our memory.
     releaseTokens(tokens);
     return 0;

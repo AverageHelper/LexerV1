@@ -9,7 +9,6 @@
 #ifndef DatalogCheck_h
 #define DatalogCheck_h
 
-#include <iostream>
 #include <sstream>
 #include <exception>
 #include <vector>
@@ -19,10 +18,11 @@
 
 class DatalogCheck {
 public:
-    bool debugLogging = false;
     DatalogProgram* checkGrammar(const std::vector<Token *> &tokens);
+    std::string getResultMsg();
     
 private:
+    std::string resultMsg = "";
     std::string currentNonTerminal = "";
     
     /// Returns @c true if the token's type matches one of the given @c expectedTypes. Throws an exception otherwise.
