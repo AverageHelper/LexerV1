@@ -1,5 +1,5 @@
 //
-//  TestLexer.m
+//  TestDatalogProgram.m.
 //  TestLexerV1
 //
 //  Created by James Robinson on 10/25/19.
@@ -13,15 +13,13 @@
 #import <XCTest/XCTest.h>
 #import "LexerV1.h"
 
-@interface TestLexer : XCTestCase
+@interface TestGrammar : XCTestCase
 
 @property (nullable) NSURL *workingURL;
 
 @end
 
-@implementation TestLexer
-
-// MARK: Setup
+@implementation TestGrammar
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -35,13 +33,12 @@
     }
 }
 
-
 // MARK: - Utility
 
 - (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
     NSString *path = [NSString stringWithCString:__FILE__ encoding:NSUTF8StringEncoding];
     path = [path stringByDeletingLastPathComponent];
-    path = [path stringByAppendingPathComponent:@"Lexer Test Files"];
+    path = [path stringByAppendingPathComponent:@"Grammar Test Files"];
     
     if (testDomain != nil) {
         path = [path stringByAppendingPathComponent:testDomain];
@@ -131,9 +128,7 @@
     return iFS;
 }
 
-
-
-// MARK: - Lexer Output
+// MARK: - Grammar Output
 
 - (void)destroyWorkingOutputFileAt:(nonnull NSURL *)fileURL {
     NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -195,31 +190,90 @@
 
 // MARK: - Major Tests
 
-- (void)runLexerOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
-    NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
-    return [self runLexerOnInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
+- (void)releaseAllTokensInVector:(std::vector<Token*>)tokens {
+    for (unsigned int i = 0; i < tokens.size(); i += 1) {
+        delete tokens.at(i);
+    }
 }
 
-- (void)runLexerOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+- (std::vector<Token*>)tokensFromInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+    NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
+    return [self tokensFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
+}
+
+- (std::vector<Token*>)tokensFromInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
     NSString *testName = [prefix stringByAppendingString:testID];
     
     std::ifstream iFS = [self openInputStreamForTestNamed:testName inDomain:fileDomain];
-    if (!iFS.is_open()) { return; }
+    if (!iFS.is_open()) { return std::vector<Token*>(); }
     
     std::vector<Token*> tokens = collectedTokensFromFile(iFS);
     iFS.close();
     NSLog(@"Parsed %lu tokens", tokens.size());
     
-    std::string tokenString = stringFromTokens(tokens);
-    NSString *result = [NSString stringWithUTF8String:tokenString.c_str()];
+    return tokens;
+}
+
+- (void)runDatalogOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+    return [self runDatalogOnInputFile:fileNum
+                            withPrefix:prefix
+                              inDomain:fileDomain
+                         expectSuccess:true];
+}
+
+- (void)runDatalogOnInputFile:(int)fileNum withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain expectSuccess:(bool)expectSuccess {
+    NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
+    return [self runDatalogOnInputFileNamed:testID
+                                 withPrefix:prefix
+                                   inDomain:fileDomain
+                              expectSuccess:expectSuccess];
+}
+
+- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain {
+    return [self runDatalogOnInputFileNamed:testID
+                                 withPrefix:prefix
+                                   inDomain:fileDomain
+                              expectSuccess:true];
+}
+
+- (void)runDatalogOnInputFileNamed:(nonnull NSString *)testID withPrefix:(nonnull NSString *)prefix inDomain:(nonnull NSString *)fileDomain expectSuccess:(bool)expectSuccess {
+    std::vector<Token*> tokens = [self tokensFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
     
-    releaseTokens(tokens);
+    if (tokens.empty()) {
+        XCTAssert(false, "%@%@ in %@ should have at least one token to test on.", prefix, testID, fileDomain);
+        return;
+    }
+    
+    DatalogCheck checker = DatalogCheck();
+    checker.debugLogging = true;
+    DatalogProgram* result = nullptr;
+    result = checker.checkGrammar(tokens);
+    
+    if (expectSuccess) {
+        XCTAssertNotEqual(result, nullptr, "Expected datalog program for test %@%@ in %@", prefix, testID, fileDomain);
+    } else {
+        XCTAssertEqual(result, nullptr, "Expected nullptr for test %@%@ in %@", prefix, testID, fileDomain);
+    }
+    
+    [self releaseAllTokensInVector:tokens];
+    
+    if (result == nullptr) {
+        return;
+    }
     
     // Write output
-    NSURL *testResult = [self writeStringToWorkingDirectory:result];
+    NSString *resultString = [NSString stringWithCString:result->toString().c_str() encoding:NSUTF8StringEncoding];
+    // FIXME: This is fake. Need somehow to get program output, or rewrite program to deliver output differently.
+    resultString = [@"Success!\n" stringByAppendingString:resultString];
+    resultString = [resultString stringByAppendingString:@"\n"];
+    NSURL *testResult = [self writeStringToWorkingDirectory:resultString];
     if (testResult == nil) {
         XCTAssert(false, "Failed to write output to test file.");
         return;
+    }
+    
+    if (result != nullptr) {
+        delete result;
     }
     
     NSString *answerPrefix;
@@ -242,164 +296,78 @@
     XCTAssert(success, @"diff '%@/%@.txt' returned '%@'", fileDomain, answerFileName, diff);
 }
 
-
-- (void)testBasicTests {
+- (void)testDatalogCheckWithGoodInput {
     NSString *domain = @"Basic Tests";
     
-    for (int testNum = 10; testNum <= 20; testNum++) {
-        [self runLexerOnInputFile:testNum withPrefix:@"in" inDomain:domain];
-    }
+    [self runDatalogOnInputFile:21 withPrefix:@"in" inDomain:domain];
+    [self runDatalogOnInputFile:26 withPrefix:@"in" inDomain:domain];
+    [self runDatalogOnInputFile:29 withPrefix:@"in" inDomain:domain];
+    [self runDatalogOnInputFile:61 withPrefix:@"in" inDomain:domain];
+    [self runDatalogOnInputFile:62 withPrefix:@"in" inDomain:domain];
+}
+
+- (void)testDatalogCheckWithBadInput {
+    NSString *domain = @"Basic Tests";
     
-    for (int testNum = 61; testNum <= 62; testNum++) {
-        [self runLexerOnInputFile:testNum withPrefix:@"in" inDomain:domain];
+    for (int testNum = 22; testNum <= 25; testNum += 1) {
+//        NSLog(@"%@ TestNum: %i", domain, testNum);
+        [self runDatalogOnInputFile:testNum withPrefix:@"in" inDomain:domain expectSuccess:false];
     }
+    [self runDatalogOnInputFile:27 withPrefix:@"in" inDomain:domain expectSuccess:false];
+    [self runDatalogOnInputFile:28 withPrefix:@"in" inDomain:domain expectSuccess:false];
 }
 
-- (void)test70Bucket {
-    NSString *domain = @"70 Bucket";
-    [self runLexerOnInputFile:1 withPrefix:@"test_case" inDomain:domain];
-    for (int testNum = 3; testNum <= 7; testNum++) {
-        [self runLexerOnInputFile:testNum withPrefix:@"test_case" inDomain:domain];
+- (void)test80Bucket {
+    NSString *domain = @"80 Bucket";
+    NSString *prefix = @"test_case";
+    
+    // Good input
+    [self runDatalogOnInputFile:0 withPrefix:prefix inDomain:domain];
+    [self runDatalogOnInputFile:4 withPrefix:prefix inDomain:domain];
+    [self runDatalogOnInputFile:5 withPrefix:prefix inDomain:domain];
+    
+    // Bad input
+    for (int testNum = 1; testNum <= 3; testNum += 1) {
+        [self runDatalogOnInputFile:testNum withPrefix:prefix inDomain:domain expectSuccess:false];
     }
-    [self runLexerOnInputFileNamed:@"noway" withPrefix:@"test_case" inDomain:domain];
-}
-
-- (void)test90Bucket {
-    NSString *domain = @"90 Bucket";
-    for (int testNum = 1; testNum <= 3; testNum++) {
-        [self runLexerOnInputFile:testNum withPrefix:@"test_case" inDomain:domain];
+    for (int testNum = 6; testNum <= 8; testNum += 1) {
+        [self runDatalogOnInputFile:testNum withPrefix:prefix inDomain:domain expectSuccess:false];
     }
 }
 
 - (void)test100Bucket {
     NSString *domain = @"100 Bucket";
-    [self runLexerOnInputFile:1 withPrefix:@"test_case" inDomain:domain];
-    [self runLexerOnInputFile:2 withPrefix:@"test_case" inDomain:domain];
+    NSString *prefix = @"test_case";
+    
+    // Good input
+    [self runDatalogOnInputFile:0 withPrefix:prefix inDomain:domain];
+    [self runDatalogOnInputFile:1 withPrefix:prefix inDomain:domain];
+    
+    // Bad input
+    [self runDatalogOnInputFile:2 withPrefix:prefix inDomain:domain expectSuccess:false];
 }
 
-- (void)testLexerPerformance {
+- (void)testDatalogCheckRaceLogging {
     [self measureBlock:^{
-        [self runLexerOnInputFile:1 withPrefix:@"test_case" inDomain:@"100 Bucket"];
+        for (int testNum = 22; testNum <= 25; testNum += 1) {
+            NSLog(@"Basic Tests TestNum: %i", testNum); // This line seems to fix a tester race condition...
+            [self runDatalogOnInputFile:testNum withPrefix:@"in" inDomain:@"Basic Tests" expectSuccess:false];
+        }
     }];
 }
 
-// MARK: Minor Tests
-
-- (void)testIdentifiers {
-    std::istringstream input = std::istringstream("three identifiers here WithSomeWe1rdValu3s");
-    while (!input.eof()) {
-        if (input.peek() == ' ') {
-            input.ignore();
+- (void)testDatalogCheckRaceSansLogging {
+    [self measureBlock:^{
+        for (int testNum = 22; testNum <= 25; testNum += 1) {
+            [self runDatalogOnInputFile:testNum withPrefix:@"in" inDomain:@"Basic Tests" expectSuccess:false];
         }
-        Token* result = IDRecognizer().recognizeTokenInStream(input);
-        XCTAssert(result->getType() == ID,
-                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        delete result;
-    }
-    
-    input.str("0this 9is _invalid for_a_string");
-    while (!input.eof()) {
-        if (input.peek() == ' ') {
-            input.ignore();
-        }
-        Token* result = IDRecognizer().recognizeTokenInStream(input);
-        XCTAssert(result->getType() == UNDEFINED,
-                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        delete result;
-    }
+    }];
 }
 
-- (void)testStrings {
-    std::istringstream input =
-        std::istringstream("'these' 'should ' ' all' 'be' 'SWwfet tein wer ' 'It''s dead, Jim!'");
-    NSMutableArray *validStrings = [NSMutableArray array];
-    
-    while (!input.eof()) {
-        Token* result = StringRecognizer(nullptr).recognizeTokenInStream(input);
-        
-        // Ignore undefined single-space tokens
-        if (result->getType() == UNDEFINED &&
-            result->getValue() == " ") {
-            delete result;
-            continue;
-        }
-        XCTAssertEqual(result->getType(), STRING,
-                       @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        if (result->getType() == STRING) {
-            NSString *value = [NSString stringWithCString:result->getValue().c_str() encoding:NSUTF8StringEncoding];
-            [validStrings addObject:value];
-        } else {
-            NSLog(@"Incorrect token type: %s", result->toString().c_str());
-        }
-        delete result;
-    }
-    
-    NSMutableString *joinedResults = [NSMutableString string];
-    for (NSString *result in validStrings) {
-        [joinedResults appendString:result];
-        [joinedResults appendString:@"\n"];
-    }
-    
-    XCTAssertEqual(validStrings.count, 6, "%@", joinedResults);
-    
-    
-    input.str("invalid strings ");
-    while (!input.eof()) {
-        if (input.peek() == ' ') {
-            input.ignore();
-        }
-        Token* result = StringRecognizer(nullptr).recognizeTokenInStream(input);
-        XCTAssert(result->getType() == UNDEFINED,
-                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        delete result;
-    }
-}
-
-- (void)testComments {
-    std::istringstream input =
-        std::istringstream("#| comment |# #||# # all of the comments");
-    NSMutableArray *validComments = [NSMutableArray array];
-    
-    while (!input.eof()) {
-        Token* result = CommentRecognizer(nullptr).recognizeTokenInStream(input);
-        
-        // Ignore undefined single-space tokens
-        if (result->getType() == UNDEFINED &&
-            result->getValue() == " ") {
-            delete result;
-            continue;
-        }
-        
-        XCTAssertEqual(result->getType(), COMMENT,
-                       @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        if (result->getType() == COMMENT) {
-            NSString *value = [NSString stringWithCString:result->getValue().c_str() encoding:NSUTF8StringEncoding];
-            [validComments addObject:value];
-        } else {
-            NSLog(@"Incorrect token type: %s", result->toString().c_str());
-        }
-        delete result;
-    }
-    
-    NSMutableString *joinedResults = [NSMutableString string];
-    for (NSString *result in validComments) {
-        [joinedResults appendString:result];
-        [joinedResults appendString:@"\n"];
-    }
-    
-    XCTAssertEqual(validComments.count, 3, "%@", joinedResults);
-    
-    
-    input.str("invalid comments #|are here");
-    while (!input.eof()) {
-        if (input.peek() == ' ') {
-            input.ignore();
-        }
-        Token* result = CommentRecognizer(nullptr).recognizeTokenInStream(input);
-        XCTAssert(result->getType() == UNDEFINED,
-                  @"Type of '%s' was %s", result->getValue().c_str(), stringForTokenType(result->getType()).c_str());
-        delete result;
-    }
+- (void)testDatalogPerformance {
+    [self measureBlock:^{
+        [self runDatalogOnInputFile:61 withPrefix:@"in" inDomain:@"Basic Tests"];
+    }];
 }
 
 @end

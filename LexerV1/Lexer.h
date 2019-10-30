@@ -17,7 +17,7 @@
 #include "Recognizers.h"
 
 /// Parses tokens in the open @c file stream.
-std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
+inline std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
     std::vector<Token*> tokens = std::vector<Token*>();
     
     // Parse tokens from stream
@@ -103,7 +103,7 @@ std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
     return tokens;
 }
 
-std::string stringFromTokens(const std::vector<Token*>& tokens) {
+inline std::string stringFromTokens(const std::vector<Token*>& tokens) {
     std::ostringstream stm = std::ostringstream();
     
     for (unsigned int i = 0; i < tokens.size(); i += 1) {
@@ -116,12 +116,12 @@ std::string stringFromTokens(const std::vector<Token*>& tokens) {
 }
 
 /// Prints tokens in the given @c vector.
-void printTokens(const std::vector<Token*>& tokens) {
+inline void printTokens(const std::vector<Token*>& tokens) {
     std::cout << stringFromTokens(tokens) << std::endl;
 }
 
 /// Deletes the pointers in @c tokens and clears the vector.
-void releaseTokens(std::vector<Token*>& tokens) {
+inline void releaseTokens(std::vector<Token*>& tokens) {
     for (unsigned int i = 0; i < tokens.size(); i += 1) {
         delete tokens.at(i);
     }

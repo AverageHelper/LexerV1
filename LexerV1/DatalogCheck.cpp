@@ -42,6 +42,11 @@ DatalogProgram* DatalogCheck::checkGrammar(const std::vector<Token *> &tokens) {
         }
     }
     
+    if (cleanTokens.empty()) {
+        std::cout << "Failure!" << std::endl;
+        return result;
+    }
+    
     try {
         currentNonTerminal = "";
         result = datalogProgram(cleanTokens, start);
@@ -153,6 +158,9 @@ DatalogProgram* DatalogCheck::datalogProgram(const std::vector<Token *> &tokens,
     result->setFacts(facts);
     result->setRules(rules);
     result->setQueries(queries);
+    
+    // Extra tokens? Bad juju!
+    checkType(tokens.at(index + 0), EOF_T);
     
     return result;
 }
