@@ -110,6 +110,22 @@ void DatalogProgram::setQueries(std::vector<Predicate *> &queries) {
     this->queries = queries;
 }
 
+const std::vector<Predicate*> DatalogProgram::getSchemes() {
+    return this->schemes;
+}
+
+const std::vector<Predicate*> DatalogProgram::getFacts() {
+    return this->facts;
+}
+
+const std::vector<Rule*> DatalogProgram::getRules() {
+    return this->rules;
+}
+
+const std::vector<Predicate*> DatalogProgram::getQueries() {
+    return this->queries;
+}
+
 
 std::string DatalogProgram::toString() {
     std::ostringstream result = std::ostringstream();

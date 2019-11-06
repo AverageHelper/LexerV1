@@ -1,0 +1,20 @@
+# For use ONLY during the Fall 2019 semester
+# Copyright Cory Barker, Brigham Young University, August 2019
+
+Schemes:
+    SK(X,Y)
+
+Facts:
+    SK('a','c').
+    SK('b','c').
+    SK('a','b').
+
+Rules:
+    SK(A,B) :- SK(A,B).
+
+Queries:
+    SK(A,'c')?
+    SK('b','c')?
+    SK('c','c')?
+    SK(A,B)?
+ 

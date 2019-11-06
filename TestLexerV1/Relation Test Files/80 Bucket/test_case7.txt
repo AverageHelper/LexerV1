@@ -1,0 +1,20 @@
+# For use ONLY during the Fall 2019 semester
+# Copyright Cory Barker, Brigham Young University, August 2019
+
+Schemes:
+  Fox(A,B,C)
+  gOAT(aMINAL,sTUBBORN)
+Facts:
+  Fox('brown','tail','sly').
+  gOAT('kids','cans').
+  gOAT('kids','').
+  gOAT('','').
+  Fox('red','tail','sly').
+Rules:
+  Fox(a,b,c) :- Fox(a,b,c).
+Queries:
+  Fox(COLOR,appearance,ATTITUDE)?
+  gOAT(POSTERITY,DIET)?
+  gOAT(POSTERITY,'cans')?
+  
+

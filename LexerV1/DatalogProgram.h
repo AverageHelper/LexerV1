@@ -37,6 +37,11 @@ public:
     std::string getIdentifier();
     std::string toString() override;
     const std::vector<std::string> getDomain();
+    
+    const std::vector<Predicate*> getSchemes();
+    const std::vector<Predicate*> getFacts();
+    const std::vector<Rule*>      getRules();
+    const std::vector<Predicate*> getQueries();
 };
 
 #endif /* DatalogProgram_h */

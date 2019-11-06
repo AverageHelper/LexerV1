@@ -1,5 +1,5 @@
 //
-//  TestDatalogProgram.m.
+//  TestGrammar.mm
 //  TestLexerV1
 //
 //  Created by James Robinson on 10/25/19.
@@ -260,6 +260,44 @@
     
     // Bad input
     [self runDatalogOnInputFile:2 withPrefix:prefix inDomain:domain expectSuccess:false];
+}
+
+- (void)testIdentifier {
+    DatalogProgram program = DatalogProgram();
+    std::string identifier = "This is me!";
+    program.setIdentifier(identifier);
+    XCTAssertEqual(program.getIdentifier(), identifier);
+}
+
+- (void)testProgramSetters {
+    DatalogProgram program = DatalogProgram();
+    
+    Predicate* scheme = new Predicate(UNDEFINED, "A scheme.");
+    Predicate* fact = new Predicate(UNDEFINED, "A fact.");
+    Rule* rule = new Rule();
+    Predicate* query = new Predicate(UNDEFINED, "A query.");
+    
+    XCTAssertEqual(program.addScheme(scheme), 1, "Failed to add scheme.");
+    XCTAssertEqual(program.getSchemes().size(), 1, "Program has wrong scheme count.");
+    
+    XCTAssertEqual(program.addFact(fact), 1, "Failed to add fact.");
+    XCTAssertEqual(program.getFacts().size(), 1, "Program has wrong fact count.");
+    
+    XCTAssertEqual(program.addRule(rule), 1, "Failed to add rule.");
+    XCTAssertEqual(program.getRules().size(), 1, "Program has wrong rule count.");
+    
+    XCTAssertEqual(program.addQuery(query), 1, "Failed to add query.");
+    XCTAssertEqual(program.getQueries().size(), 1, "Program has wrong query count.");
+    
+    // DatalogProgram deconstructor should deallocate its children.
+}
+
+- (void)testRulePredicate {
+    Rule rule = Rule();
+    Predicate* predicate = new Predicate(UNDEFINED, "A predicate.");
+    
+    XCTAssertEqual(rule.addPredicate(predicate), 1, "Failed to add predicate.");
+    XCTAssertEqual(rule.getPredicates().size(), 1, "Failed to add predicate.");
 }
 
 - (void)testDatalogCheckRaceLogging {

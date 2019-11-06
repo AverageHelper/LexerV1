@@ -1,0 +1,29 @@
+# For use ONLY during the Fall 2019 semester
+# Copyright Cory Barker, Brigham Young University, August 2019
+
+Schemes:
+	loves(E,F)
+	hates(C,D)
+Facts:
+	loves('bob','jane').
+	loves('jane','frankk').
+	loves('frankk','mary').
+	loves('mary','bob').
+	loves('john','john').
+	hates('bob','mary').
+	hates('mary','frankk').
+	hates('frankk','jane').
+	hates('jane','bob').
+	hates('gollum','gollum').
+Rules:
+	hates(a,b) :- hates(a,b).
+Queries:
+	loves(A,X)?
+	loves(J,J)?
+	loves('frankk','mary')?
+	loves('mary','frankk')?
+	hates(G,G)?
+	hates('jane', B)?
+	hates(M, 'frankk')?
+
+
