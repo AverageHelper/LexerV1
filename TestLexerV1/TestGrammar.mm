@@ -292,12 +292,22 @@
     // DatalogProgram deconstructor should deallocate its children.
 }
 
-- (void)testRulePredicate {
+- (void)testPredicate {
     Rule rule = Rule();
     Predicate* predicate = new Predicate(UNDEFINED, "A predicate.");
     
+    XCTAssertEqual(predicate->getType(), UNDEFINED, "Wrong type on predicate.");
+    predicate->setType(STRING);
+    XCTAssertEqual(predicate->getType(), STRING, "Wrong predicate type after setter.");
+    
+    predicate->addItem("A");
+    predicate->addItem("B");
+    XCTAssertEqual(predicate->getItems().size(), 2, "Failed to add two items to predicate.");
+    
     XCTAssertEqual(rule.addPredicate(predicate), 1, "Failed to add predicate.");
     XCTAssertEqual(rule.getPredicates().size(), 1, "Failed to add predicate.");
+    
+    // Rule deletes its predicates.
 }
 
 - (void)testDatalogCheckRaceLogging {

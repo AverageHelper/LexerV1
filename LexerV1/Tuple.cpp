@@ -19,3 +19,13 @@ Tuple::Tuple(const Tuple &other) {
         this->push_back(other.at(i));
     }
 }
+
+int Tuple::firstIndexOf(std::string val) {
+    for (unsigned int i = 0; i < size(); i += 1) {
+        if (this->at(i) == val) {
+            return i;
+        }
+    }
+    
+    return -1;
+}

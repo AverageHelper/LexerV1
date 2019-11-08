@@ -90,18 +90,20 @@ int main(int argc, char* argv[]) {
         
         if (relation != nullptr) {
             // Select appropriate tuples based on our query.
-            Relation* selected = relation->select(Tuple(query->getItems()));
+//            Relation* selected = relation->select(Tuple(query->getItems()));
+            // See constants? Select where col = val.
+            // See same variable? Select where col1 val = col2 val
             
             // Project our tuples to include only the columns we want.
-            Relation* projected = selected->project(Tuple({ "" }));
+//            Relation* projected = selected->project(Tuple({ "" }));
             
             // Rename the scheme of the Relation to the names of the variables found in the query.
-            Relation* renamed = projected->rename("", "");
+//            Relation* renamed = projected->rename("", "");
             
             // Cleanup behind us.
-            delete selected;
-            delete projected;
-            delete renamed;
+//            delete selected;
+//            delete projected;
+//            delete renamed;
         }
     }
     

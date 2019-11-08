@@ -217,10 +217,21 @@
 }
 
 - (void)testRelationScheme {
-    Relation relation = Relation("R", {});
-    Tuple scheme = Tuple({ "A", "B", "C" });
-    relation.setScheme(scheme);
-    XCTAssertEqual(relation.getScheme(), scheme, "Failed to set scheme.");
+    Relation relation = Relation("R", Tuple({ "A", "B", "C" }));
+    XCTAssertEqual(relation.getScheme(), Tuple({ "A", "B", "C" }), "Incorrect scheme.");
+    XCTAssertEqual(relation.getColumnCount(), 3, "Wrong column count.");
+    
+    relation = Relation("R", Tuple({ "N", "A", "P" }));
+    XCTAssertEqual(relation.getColumnCount(), 3, "Wrong column count.");
+    
+    XCTAssert(relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" })), "Failed to add tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" })), "Failed to add tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
+    // Intentional duplicate
+    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
+    
+    XCTAssertEqual(relation.getContents().size(), 4, "Wrong content size.");
 }
 
 - (void)testAddingTuple {
@@ -229,9 +240,13 @@
     XCTAssert(relation.addTuple(good), "Failed to add tuple: wrong column count.");
     XCTAssertEqual(relation.getContents().size(), 1, "Failed to add tuple.");
     
-    Tuple bad = Tuple({ "Only one" });
-    XCTAssertFalse(relation.addTuple(bad), "Added a bad tuple.");
-    XCTAssertEqual(relation.getContents().size(), 1);
+    Tuple tooSmall = Tuple({ "Only one" });
+    XCTAssertFalse(relation.addTuple(tooSmall), "Added a too-small tuple.");
+    XCTAssertEqual(relation.getContents().size(), 1, "Relation size is incorrect.");
+    
+    Tuple tooLarge = Tuple({ "one", "two", "three", "four" });
+    XCTAssertFalse(relation.addTuple(tooLarge), "Added a too-large tuple.");
+    XCTAssertEqual(relation.getContents().size(), 1, "Relation size is incorrect.");
 }
 
 - (void)testSchemeImport {
@@ -303,16 +318,230 @@
 - (void)testRename {
     Relation relation = Relation("R", Tuple({ "A", "B", "C" }));
     
-    XCTAssertEqual(relation.rename("D", "X"), nullptr); // Out of scheme should fail
+    XCTAssert(relation == *relation.rename("D", "X"),
+              "Failed to escape rename gracefully.");
     
     Relation* renamed = relation.rename("A", "X");
     XCTAssertNotEqual(renamed, nullptr);
     XCTAssertEqual(relation.getScheme().at(0), "A");
     XCTAssertEqual(renamed->getScheme().at(0), "X");
     
-    if (renamed != nullptr) {
-        delete renamed;
+    delete renamed;
+    
+    renamed = relation.rename("B", "A");
+    XCTAssert(relation == *renamed, "Inadvertently duplicated scheme column.");
+    XCTAssertEqual(renamed->getScheme(), Tuple({ "A", "B", "C" }),
+                   "Inadvertently duplicated scheme column.");
+    
+    delete renamed;
+    
+    renamed = relation.rename("B", "C");
+    XCTAssert(relation == *renamed, "Inadvertently duplicated scheme column.");
+    XCTAssertEqual(renamed->getScheme(), Tuple({ "A", "B", "C" }),
+                   "Inadvertently duplicated scheme column.");
+    
+    delete renamed;
+}
+
+- (void)testSelectConstants {
+    Relation relation = Relation("R", Tuple({ "N", "A", "P" }));
+    relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" }));
+    relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" }));
+    relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" }));
+    relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" }));
+    
+    Tuple scheme = relation.getScheme();
+    
+    
+    // One name
+    int colIfFound = scheme.firstIndexOf("N");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'N' is not in the scheme");
+    
+    size_t col = static_cast<size_t>(colIfFound);
+    std::pair<size_t, std::string> query = std::make_pair(col, "C. Brown"); // σ N='C. Brown'
+    Relation* result = relation.select({ query });
+    XCTAssertNotEqual(result, nullptr, "Select operation failed.");
+    
+    XCTAssertEqual(result->getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result->getContents().size(), 1,
+                   "Select operation found %lu results, not 1.", result->getContents().size());
+    
+    delete result;
+    
+    
+    // One address
+    colIfFound = scheme.firstIndexOf("A");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'A' is not in the scheme");
+    
+    col = static_cast<size_t>(colIfFound);
+    query = std::make_pair(col, "12 Apple St."); // σ A='12 Apple St.'
+    result = relation.select({ query });
+    XCTAssertNotEqual(result, nullptr, "Select operation failed.");
+    
+    XCTAssertEqual(result->getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result->getContents().size(), 2,
+                   "Select operation found %lu results, not 2.", result->getContents().size());
+    
+    delete result;
+    
+    
+    // Nonexistent address
+    query = std::make_pair(col, "42 Wallaby Way"); // σ A='42 Wallaby Way'
+    result = relation.select({ query });
+    XCTAssertNotEqual(result, nullptr, "Select operation failed.");
+    
+    XCTAssertEqual(result->getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result->getContents().size(), 0,
+                   "Select operation found %lu results, not 0.", result->getContents().size());
+    
+    delete result;
+    
+    
+    // Name and address
+    colIfFound = scheme.firstIndexOf("N");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'N' is not in the scheme");
+    col = static_cast<size_t>(colIfFound);
+    std::pair<size_t, std::string> nameQuery = std::make_pair(col, "Snoopy"); // σ N='Snoopy'
+    
+    colIfFound = scheme.firstIndexOf("P");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'P' is not in the scheme");
+    col = static_cast<size_t>(colIfFound);
+    std::pair<size_t, std::string> phoneQuery = std::make_pair(col, "555-1234"); // σ P='555-1234'
+    
+    result = relation.select({ nameQuery, phoneQuery });
+    XCTAssertNotEqual(result, nullptr, "Select operation failed.");
+    
+    XCTAssertEqual(result->getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result->getContents().size(), 1,
+                   "Select operation found %lu results, not 2.", result->getContents().size());
+    
+    delete result;
+}
+
+- (void)testSelectColumnEquivalence {
+    Relation relation = Relation("Loves", Tuple({ "A", "B" }));
+    relation.addTuple(Tuple({ "Snoopy", "Snoopy" }));
+    relation.addTuple(Tuple({ "Lyra", "Bon Bon" }));
+    relation.addTuple(Tuple({ "Bright Mac", "Pear Butter" }));
+    relation.addTuple(Tuple({ "Steven Magnet", "Steven Magnet" }));
+    
+    Tuple scheme = relation.getScheme();
+    
+    // Name and address
+    int colIfFound = scheme.firstIndexOf("A");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'A' is not in the scheme");
+    size_t col1 = static_cast<size_t>(colIfFound);
+    
+    colIfFound = scheme.firstIndexOf("B");
+    XCTAssertGreaterThanOrEqual(colIfFound, 0, "'B' is not in the scheme");
+    size_t col2 = static_cast<size_t>(colIfFound);
+    std::pair<size_t, size_t> colsMatch = std::make_pair(col1, col2); // σ A=B
+    
+    Relation* result = relation.select({ colsMatch });
+    XCTAssertNotEqual(result, nullptr, "Select operation failed.");
+    
+    XCTAssertEqual(result->getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result->getContents().size(), 2,
+                   "Select operation found %lu results, not 2.", result->getContents().size());
+    XCTAssertEqual(result->listContents().size(), 2,
+                   "List returns wrong results.");
+    
+    delete result;
+}
+
+- (void)testProject {
+    Relation relation = Relation("R", Tuple({ "N", "A", "P" }));
+    relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" }));
+    relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" }));
+    relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" }));
+    relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" }));
+    
+    Relation* projected = relation.project(Tuple({ "A" }));
+    XCTAssertNotEqual(projected, nullptr, "Project operation failed.");
+    
+    XCTAssertEqual(projected->getScheme(), Tuple({ "A" }), "Wrong scheme after projection.");
+    XCTAssertEqual(projected->getColumnCount(), 1, "Wrong number of column safter projection.");
+    // There are only 3 unique addresses
+    XCTAssertEqual(projected->getContents().size(), 3, "Wrong number of rows after projection.");
+    
+    for (auto t : projected->getContents()) {
+        XCTAssertEqual(t.size(), 1, "Wrong column count in some rows.");
     }
+    
+    delete projected;
+    
+    // Test reordering
+    projected = relation.project(Tuple({ "P", "A", "N" }));
+    XCTAssertEqual(projected->getScheme(), Tuple({ "P", "A", "N" }),
+                   "Wrong scheme after projection.");
+    XCTAssertEqual(projected->getColumnCount(), relation.getColumnCount(),
+                   "Wrong number of column safter projection.");
+    XCTAssertEqual(projected->getContents().size(), relation.getContents().size(),
+                   "Wrong number of rows after projection.");
+    
+    // Check that our tuples are ordered properly: if adding the right ones has no effect on
+    //     row count, then we have no different columns!
+    projected->addTuple(Tuple({ "555-1234", "12 Apple St.", "C. Brown" }));
+    projected->addTuple(Tuple({ "555-5678", "34 Pear Ave.", "L. Van Pelt" }));
+    projected->addTuple(Tuple({ "555-9999", "56 Grape Blvd.", "P. Patty" }));
+    projected->addTuple(Tuple({ "555-1234", "12 Apple St.", "Snoopy" }));
+    
+    XCTAssertEqual(projected->getContents().size(), relation.getContents().size(),
+                   "Wrong rows after projection.");
+    
+    delete projected;
+    
+    // Test columns outside of domain
+    projected = relation.project(Tuple({ "B", "C", "D" }));
+    XCTAssert(projected->getScheme().empty(),
+              "Wrong scheme after projection.");
+    XCTAssertEqual(projected->getColumnCount(), 0,
+                   "Wrong number of columns after projection.");
+    XCTAssert(projected->getContents().empty(),
+                   "Wrong number of rows after projection.");
+    
+    delete projected;
+    
+    projected = relation.project(Tuple());
+    XCTAssert(projected->getScheme().empty(),
+              "Wrong scheme after projection.");
+    XCTAssertEqual(projected->getColumnCount(), 0,
+                   "Wrong number of columns after projection.");
+    XCTAssert(projected->getContents().empty(),
+                   "Wrong number of rows after projection.");
+    
+    delete projected;
+    
+    Relation empty = Relation("Empty");
+    projected = empty.project(Tuple({ "N", "A", "P" }));
+    XCTAssert(projected->getScheme().empty(),
+              "Wrong scheme after projection.");
+    XCTAssertEqual(projected->getColumnCount(), 0,
+                   "Wrong number of columns after projection.");
+    XCTAssert(projected->getContents().empty(),
+                   "Wrong number of rows after projection.");
+    
+    delete projected;
+    
+    // Test duplicate columns
+    projected = relation.project(Tuple({ "A", "P", "A", "A" }));
+    XCTAssertEqual(projected->getColumnCount(), 2, "Wrong column count after projection.");
+    XCTAssertEqual(projected->getContents().size(), 3, "Wrong row count after projection.");
+    
+    relation.addTuple(Tuple({ "12 Apple St.", "555-1234" }));
+    relation.addTuple(Tuple({ "34 Pear Ave.", "555-5678" }));
+    relation.addTuple(Tuple({ "56 Grape Blvd.", "555-9999" }));
+    relation.addTuple(Tuple({ "12 Apple St.", "555-1234" }));
+    
+    XCTAssertEqual(projected->getContents().size(), 3,
+                   "Wrong rows after projection.");
+    
+    delete projected;
 }
 
 @end
