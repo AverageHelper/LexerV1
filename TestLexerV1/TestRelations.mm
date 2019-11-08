@@ -230,12 +230,12 @@
     relation = Relation("R", Tuple({ "N", "A", "P" }));
     XCTAssertEqual(relation.getColumnCount(), 3, "Wrong column count.");
     
-    XCTAssert(relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
-    XCTAssert(relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" })), "Failed to add tuple.");
-    XCTAssert(relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" })), "Failed to add tuple.");
-    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" })), "Wrong size tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" })), "Wrong size tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" })), "Wrong size tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Wrong size tuple.");
     // Intentional duplicate
-    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Failed to add tuple.");
+    XCTAssert(relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" })), "Wrong size tuple.");
     
     XCTAssertEqual(relation.getContents().size(), 4, "Wrong content size.");
 }
@@ -526,13 +526,71 @@
 // MARK: - Project
 
 - (void)testProject {
-    Relation relation = Relation("R", Tuple({ "N", "A", "P" }));
+    // "The Beta Relation"
+    Relation relation = Relation("beta", Tuple({ "cat", "fish", "bird", "bunny" }));
+    relation.addTuple(Tuple({ "3", "4", "2", "4" }));
+    relation.addTuple(Tuple({ "6", "4", "9", "2" }));
+    relation.addTuple(Tuple({ "4", "3", "2", "7" }));
+    relation.addTuple(Tuple({ "1", "5", "2", "4" }));
+    relation.addTuple(Tuple({ "1", "5", "8", "3" }));
+    
+    Tuple testScheme = Tuple({ "bunny" });
+    Relation projected = relation.project(testScheme); // π 'bunny'
+    
+    XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
+    XCTAssertEqual(projected.getColumnCount(), 1, "Wrong number of columns projected.");
+    // If adding correct tuples has no effect, then success!
+    XCTAssertEqual(projected.getContents().size(), 4, "Wrong number of rows after projection.");
+    XCTAssert(projected.addTuple(Tuple({ "4" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "2" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "7" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "3" })), "Wrong size tuple.");
+    XCTAssertEqual(projected.getContents().size(), 4, "Wrong number of rows after projection.");
+    
+    testScheme = Tuple({ "cat", "bird", "bunny" });
+    projected = relation.project(testScheme); // π 'cat','bird','bunny'
+    
+    XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
+    XCTAssertEqual(projected.getColumnCount(), 3, "Wrong number of columns projected.");
+    // Check contents
+    XCTAssertEqual(projected.getContents().size(), 5, "Wrong number of rows after projection.");
+    XCTAssert(projected.addTuple(Tuple({ "3", "2", "4" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "6", "9", "2" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "4", "2", "7" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "1", "2", "4" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "1", "8", "3" })), "Wrong size tuple.");
+    XCTAssertEqual(projected.getContents().size(), 5, "Wrong number of rows after projection.");
+    
+    // "The Alpha Relation"
+    
+    relation = Relation("alpha", Tuple({ "cat", "dog", "fish" }));
+    relation.addTuple(Tuple({ "1", "2", "5" }));
+    relation.addTuple(Tuple({ "1", "4", "1" }));
+    relation.addTuple(Tuple({ "2", "3", "2" }));
+    relation.addTuple(Tuple({ "6", "7", "4" }));
+    
+    testScheme = Tuple({ "fish", "dog" });
+    projected = relation.project(testScheme); // π 'fish','dog'
+    
+    XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
+    XCTAssertEqual(projected.getColumnCount(), 2, "Wrong number of columns projected.");
+    // Check contents
+    XCTAssertEqual(projected.getContents().size(), 4, "Wrong number of rows after projection.");
+    XCTAssert(projected.addTuple(Tuple({ "5", "2" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "1", "4" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "2", "3" })), "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "4", "7" })), "Wrong size tuple.");
+    XCTAssertEqual(projected.getContents().size(), 4, "Wrong number of rows after projection.");
+    
+    // Other relations
+    
+    relation = Relation("R", Tuple({ "N", "A", "P" }));
     relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" }));
     relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" }));
     relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" }));
     relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" }));
     
-    Relation projected = relation.project(Tuple({ "A" }));
+    projected = relation.project(Tuple({ "A" }));
     
     XCTAssertEqual(projected.getScheme(), Tuple({ "A" }), "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 1, "Wrong number of column safter projection.");
@@ -554,10 +612,14 @@
     
     // Check that our tuples are ordered properly: if adding the right ones has no effect on
     //     row count, then we have no different columns!
-    projected.addTuple(Tuple({ "555-1234", "12 Apple St.", "C. Brown" }));
-    projected.addTuple(Tuple({ "555-5678", "34 Pear Ave.", "L. Van Pelt" }));
-    projected.addTuple(Tuple({ "555-9999", "56 Grape Blvd.", "P. Patty" }));
-    projected.addTuple(Tuple({ "555-1234", "12 Apple St.", "Snoopy" }));
+    XCTAssert(projected.addTuple(Tuple({ "555-1234", "12 Apple St.", "C. Brown" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "555-5678", "34 Pear Ave.", "L. Van Pelt" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "555-9999", "56 Grape Blvd.", "P. Patty" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "555-1234", "12 Apple St.", "Snoopy" })),
+              "Wrong size tuple.");
     
     XCTAssertEqual(projected.getContents().size(), relation.getContents().size(),
                    "Wrong rows after projection.");
@@ -593,10 +655,14 @@
     XCTAssertEqual(projected.getColumnCount(), 2, "Wrong column count after projection.");
     XCTAssertEqual(projected.getContents().size(), 3, "Wrong row count after projection.");
     
-    relation.addTuple(Tuple({ "12 Apple St.", "555-1234" }));
-    relation.addTuple(Tuple({ "34 Pear Ave.", "555-5678" }));
-    relation.addTuple(Tuple({ "56 Grape Blvd.", "555-9999" }));
-    relation.addTuple(Tuple({ "12 Apple St.", "555-1234" }));
+    XCTAssert(projected.addTuple(Tuple({ "12 Apple St.", "555-1234" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "34 Pear Ave.", "555-5678" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "56 Grape Blvd.", "555-9999" })),
+              "Wrong size tuple.");
+    XCTAssert(projected.addTuple(Tuple({ "12 Apple St.", "555-1234" })),
+              "Wrong size tuple.");
     
     XCTAssertEqual(projected.getContents().size(), 3,
                    "Wrong rows after projection.");
