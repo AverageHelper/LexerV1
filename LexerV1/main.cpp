@@ -12,6 +12,8 @@
 #include "DatalogCheck.h"
 #include "Database.h"
 
+int indexOfValueInVector(std::string query, const std::vector<std::string> &domain);
+
 int main(int argc, char* argv[]) {
     std::string filename = "";
     bool uiLogging = (argc <= 1);
@@ -84,26 +86,48 @@ int main(int argc, char* argv[]) {
     }
     
     // Evaluate Queries
-    for (unsigned int relationIndex = 0; relationIndex < program->getQueries().size(); relationIndex += 1) {
-        Predicate* query = program->getQueries().at(relationIndex);
+    for (unsigned int queryIdx = 0; queryIdx < program->getQueries().size(); queryIdx += 1) {
+        Predicate* query = program->getQueries().at(queryIdx);
         Relation* relation = database->relationWithName(query->getIdentifier());
         
         if (relation != nullptr) {
-            // Select appropriate tuples based on our query.
-//            Relation* selected = relation->select(Tuple(query->getItems()));
-            // See constants? Select where col = val.
-            // See same variable? Select where col1 val = col2 val
+            // Evaluate each item in query
+            std::vector<size_t> matchColumns = {};
+            std::vector< std::pair<size_t, std::string> > matchValues = {};
             
-            // Project our tuples to include only the columns we want.
-//            Relation* projected = selected->project(Tuple({ "" }));
+            std::vector<std::string> processedOperands = {};
             
-            // Rename the scheme of the Relation to the names of the variables found in the query.
-//            Relation* renamed = projected->rename("", "");
+            for (unsigned int col = 0; col < query->getItems().size(); col += 1) {
+                std::string val = query->getItems().at(col);
+                
+                // If we find a constant, σ col=val
+                if (val.at(0) == '\'') {
+                    matchValues.push_back(std::make_pair(col, val));
+                    continue;
+                }
+                
+                // If we find a matching column, σ col=duplicateCol
+                int duplicateCol = indexOfValueInVector(val, processedOperands);
+                if (duplicateCol >= 0) {
+                    matchColumns.push_back(col); // inefficient?
+                    matchColumns.push_back(duplicateCol);
+                }
+            }
             
-            // Cleanup behind us.
-//            delete selected;
-//            delete projected;
-//            delete renamed;
+            // Make row selections from query
+            Relation selected = *relation;
+            if (!matchColumns.empty()) {
+                selected = selected.select({ matchColumns });
+            }
+            if (!matchValues.empty()) {
+                selected = selected.select(matchValues);
+            }
+            
+            // Project only the columns we want.
+            Relation projected = selected.project(Tuple({ "" }));
+            
+            // Rename the columns to the names of the variables found in the query
+            Relation renamed = projected.rename("", "");
         }
     }
     
@@ -115,4 +139,15 @@ int main(int argc, char* argv[]) {
     // Free our memory.
     releaseTokens(tokens);
     return 0;
+}
+
+int indexOfValueInVector(std::string query, const std::vector<std::string> &domain) {
+    for (unsigned int idx = 0; idx < domain.size(); idx += 1) {
+        std::string val = domain.at(idx);
+        if (val == query) {
+            return idx;
+        }
+    }
+    
+    return -1;
 }

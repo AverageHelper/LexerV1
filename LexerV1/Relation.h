@@ -52,20 +52,20 @@ public:
     
     
     /// Given a name @e in the schema, and a new name @e not in the schema, pretend the name is actually the new name.
-    Relation* rename(std::string oldCol, std::string newCol) const;
+    Relation rename(std::string oldCol, std::string newCol) const;
     
     
-    /// Get tuples whose values match each equivalence pair given in @c queries.
+    /// Get rows whose values match each equivalence pair given in @c queries.
     ///
     /// Each @c pair denotes a column index and an expected value to find at that index. Each @c Tuple in the resulting @c Relation will contain values at each index that match the query's value.
     ///
     /// A query is ignored if its column index is not valid for the relation's scheme.
     ///
     /// @returns A new @c Relation whose rows match the query.
-    Relation* select(std::vector< std::pair<size_t, std::string> > queries) const;
+    Relation select(std::vector< std::pair<size_t, std::string> > queries) const;
     
     
-    /// Get tuples whose values match each equivalence pair given in @c queries.
+    /// Get rows whose values match each equivalence pair given in @c queries.
     ///
     /// Each @c pair denotes two column indices. Each @c Tuple in the resulting @c Relation will contain matching values at both indices.
     /// That is, the value at the first index matches the value at the second.
@@ -73,11 +73,11 @@ public:
     /// A query is ignored if either column index is not valid for the relation's scheme.
     ///
     /// @returns A new @c Relation whose rows match the query.
-    Relation* select(std::vector< std::pair<size_t, size_t> > queries) const;
+    Relation select(std::vector<std::vector<size_t>> queries) const;
     
     
     /// Keep only the columns from the relation that correspond to the positions of the variables in the query.
-    Relation* project(Tuple otherScheme) const;
+    Relation project(Tuple otherScheme) const;
     
     /// Swaps the relation's scheme and values at index @c oldCol with @c newCol.
     ///
@@ -85,6 +85,8 @@ public:
     void swapColumns(size_t oldCol, size_t newCol);
     
     bool operator==(const Relation &other);
+    
+    std::string toString() const;
 };
 
 #endif /* Relation_h */

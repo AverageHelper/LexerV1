@@ -59,7 +59,7 @@ std::vector<Tuple> Relation::listContents() const {
     return result;
 }
 
-Relation* Relation::rename(std::string oldCol, std::string newCol) const {
+Relation Relation::rename(std::string oldCol, std::string newCol) const {
     Tuple newScheme = getScheme();
     
     // Evaluate for each column in scheme.
@@ -70,55 +70,71 @@ Relation* Relation::rename(std::string oldCol, std::string newCol) const {
         }
     }
     
-    return new Relation(name, newScheme);
+    return Relation(name, newScheme);
 }
 
-Relation* Relation::select(std::vector<std::pair<size_t, std::string>> queries) const {
-    Relation* result = new Relation(getName(), getScheme());
+Relation Relation::select(std::vector< std::pair<size_t, std::string> > queries) const {
+    Relation result = Relation(getName(), getScheme());
     
     // Evaluate each tuple
     for (auto t : getContents()) {
-        bool isMatch = false;
-        
+        bool isMatch = true;
+
         for (auto query : queries) {
             size_t col = query.first;
             std::string val = query.second;
             
-            if (col >= result->getColumnCount()) {
+            if (col >= result.getColumnCount()) {
                 continue; // Too big? Next query.
             }
             if (t.at(col) != val) {
+                isMatch = false;
                 break; // Column doesn't match an expected value? Next tuple.
             }
-            
-            isMatch = true;
         }
         
         if (isMatch) {
-            result->addTuple(t);
+            result.addTuple(t);
         }
     }
     
     return result;
 }
 
-Relation* Relation::select(std::vector<std::pair<size_t, size_t>> queries) const {
-    Relation* result = new Relation(getName(), getScheme());
+Relation Relation::select(std::vector< std::vector<size_t> > queries) const {
+    Relation result = Relation(getName(), getScheme());
     
     // Evaluate each equivalence
-    for (unsigned int queryIdx = 0; queryIdx < queries.size(); queryIdx += 1) {
-        std::pair<size_t, size_t> query = queries.at(queryIdx);
-        size_t col1 = query.first;
-        size_t col2 = query.second;
+    for (std::vector<size_t> query : queries) {
         
-        if (col1 >= result->getColumnCount() || col2 >= result->getColumnCount()) {
-            continue; // Too big? Move along.
+        if (query.empty()) { // No query? Select everything.
+            result.contents = getContents();
+            break;
         }
         
-        // Evaluate each tuple
+        // Make sure that each of the named columns carry the same value, if they're in range.
         for (auto t : getContents()) {
-            if (t.at(col1) == t.at(col2)) {
-                result->addTuple(t);
+            bool hasMatch = true;
+            std::string val = "LexerV1.INVALID";
+            
+            for (auto col : query) {
+                if (col >= result.getColumnCount()) {
+                    continue; // Too big? Move along.
+                }
+                
+                if (val == "LexerV1.INVALID") {
+                    val = t.at(col);
+                }
+                
+                // If we don't have a match, skip along.
+                if (t.at(col) != val) {
+                    hasMatch = false;
+                    break;
+                }
+            }
+            
+            if (hasMatch) {
+                result.addTuple(t);
             }
         }
     }
@@ -233,21 +249,21 @@ void Relation::keepOnlyColumnsUntil(size_t col) {
     contents = stripped;
 }
 
-Relation* Relation::project(Tuple scheme) const {
+Relation Relation::project(Tuple scheme) const {
     Tuple current = getScheme();
     Tuple newScheme = scheme;
     
     stripExtraColsFromScheme(newScheme); // This removes columns that don't exist.
     
-    Relation* result = new Relation(*this);
+    Relation result = Relation(*this);
     
     // For each column in scheme, find where it was in our old scheme, then apply.
     for (unsigned int newIndex = 0; newIndex < newScheme.size(); newIndex += 1) {
-        size_t oldIndex = result->indexForColumnInScheme(newScheme.at(newIndex));
-        result->swapColumns(oldIndex, newIndex);
+        size_t oldIndex = result.indexForColumnInScheme(newScheme.at(newIndex));
+        result.swapColumns(oldIndex, newIndex);
     }
     
-    result->keepOnlyColumnsUntil(newScheme.size());
+    result.keepOnlyColumnsUntil(newScheme.size());
     
     return result;
 }
@@ -256,4 +272,8 @@ bool Relation::operator==(const Relation &other) {
     return (getName() == other.getName() &&
             getScheme() == other.getScheme() &&
             getContents() == other.getContents());
+}
+
+std::string Relation::toString() const {
+    return "";
 }
