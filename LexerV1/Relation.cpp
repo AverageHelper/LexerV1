@@ -70,7 +70,9 @@ Relation Relation::rename(std::string oldCol, std::string newCol) const {
         }
     }
     
-    return Relation(name, newScheme);
+    Relation newRelation = Relation(name, newScheme);
+    newRelation.contents = getContents();
+    return newRelation;
 }
 
 Relation Relation::select(std::vector< std::pair<size_t, std::string> > queries) const {

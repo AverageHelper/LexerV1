@@ -325,13 +325,27 @@
 
 - (void)testRename {
     Relation relation = Relation("R", Tuple({ "A", "B", "C" }));
+    relation.addTuple(Tuple({ "1", "2", "3" }));
     
+    // Renaming outside of the domain should do nothing
     XCTAssert(relation == relation.rename("D", "X"),
-              "Failed to escape rename gracefully.");
+              "Failed to escape gracefully.");
     
     Relation renamed = relation.rename("A", "X");
     XCTAssertEqual(relation.getScheme().at(0), "A");
     XCTAssertEqual(renamed.getScheme().at(0), "X");
+    XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
+                   "Wrong contents after rename.");
+    XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
+                   "Wrong contents after rename.");
+    
+    renamed = relation.rename("C", "X");
+    XCTAssertEqual(relation.getScheme().at(2), "C");
+    XCTAssertEqual(renamed.getScheme().at(2), "X");
+    XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
+                   "Wrong contents after rename.");
+    XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
+                   "Wrong contents after rename.");
     
     renamed = relation.rename("B", "A");
     XCTAssert(relation == renamed, "Inadvertently duplicated scheme column.");
