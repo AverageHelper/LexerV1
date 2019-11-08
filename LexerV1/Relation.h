@@ -31,11 +31,6 @@ private:
     /// Returns the index of @c col in @c domain, or -1 if it is not found.
     int indexForColumnInTuple(std::string col, const Tuple &domain);
     
-    /// Swaps the relation's scheme and values at index @c oldCol with @c newCol.
-    ///
-    /// If @c newCol exceeds the scheme's last index, swaps with the last column instead.
-    void swapColumns(size_t oldCol, size_t newCol);
-    
     /// Strips all columns following @c col from the relation, including @c col.
     void keepOnlyColumnsUntil(size_t col);
     
@@ -83,6 +78,11 @@ public:
     
     /// Keep only the columns from the relation that correspond to the positions of the variables in the query.
     Relation* project(Tuple otherScheme) const;
+    
+    /// Swaps the relation's scheme and values at index @c oldCol with @c newCol.
+    ///
+    /// If @c newCol exceeds the scheme's last index, swaps with the last column instead.
+    void swapColumns(size_t oldCol, size_t newCol);
     
     bool operator==(const Relation &other);
 };

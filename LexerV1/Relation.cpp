@@ -84,7 +84,7 @@ Relation* Relation::select(std::vector<std::pair<size_t, std::string>> queries) 
             size_t col = query.first;
             std::string val = query.second;
             
-            if (col > result->getColumnCount()) {
+            if (col >= result->getColumnCount()) {
                 continue; // Too big? Next query.
             }
             if (t.at(col) != val) {
@@ -111,7 +111,7 @@ Relation* Relation::select(std::vector<std::pair<size_t, size_t>> queries) const
         size_t col1 = query.first;
         size_t col2 = query.second;
         
-        if (col1 > result->getColumnCount() || col2 > result->getColumnCount()) {
+        if (col1 >= result->getColumnCount() || col2 >= result->getColumnCount()) {
             continue; // Too big? Move along.
         }
         
@@ -180,8 +180,16 @@ int Relation::indexForColumnInTuple(std::string col, const Tuple &domain) {
 }
 
 void Relation::swapColumns(size_t oldCol, size_t newCol) {
+    if (oldCol >= getColumnCount()) {
+        oldCol = getColumnCount() - 1; // Too large? Use the end instead.
+    }
+    
     if (newCol >= getColumnCount()) {
         newCol = getColumnCount() - 1; // Too large? Use the end instead.
+    }
+    
+    if (oldCol == newCol) {
+        return; // Swap with self? Done.
     }
     
     // Reorder scheme
