@@ -351,11 +351,19 @@
     XCTAssert(relation == renamed, "Inadvertently duplicated scheme column.");
     XCTAssertEqual(renamed.getScheme(), Tuple({ "A", "B", "C" }),
                    "Inadvertently duplicated scheme column.");
+    XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
+                   "Wrong contents after rename.");
+    XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
+                   "Wrong contents after rename.");
     
     renamed = relation.rename("B", "C");
     XCTAssert(relation == renamed, "Inadvertently duplicated scheme column.");
     XCTAssertEqual(renamed.getScheme(), Tuple({ "A", "B", "C" }),
                    "Inadvertently duplicated scheme column.");
+    XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
+                   "Wrong contents after rename.");
+    XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
+                   "Wrong contents after rename.");
 }
 
 // MARK: - Select
@@ -438,7 +446,7 @@
 - (void)testSelectColumnEquivalence {
     Relation relation = Relation("Loves", Tuple({ "A", "B" }));
     relation.addTuple(Tuple({ "Snoopy", "Snoopy" }));
-    relation.addTuple(Tuple({ "Lyra", "Bon Bon" }));
+    relation.addTuple(Tuple({ "Cranky Doodle", "Matilda" }));
     relation.addTuple(Tuple({ "Bright Mac", "Pear Butter" }));
     relation.addTuple(Tuple({ "Steven Magnet", "Steven Magnet" }));
     
@@ -459,7 +467,7 @@
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), 2,
-                   "Select operation found %lu results, not 2.", result.getContents().size());
+                   "Select operation found wrong number of results.");
     XCTAssertEqual(result.listContents().size(), 2,
                    "List returns wrong results.");
     
@@ -469,7 +477,7 @@
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), 2,
-                   "Select operation found %lu results, not 2.", result.getContents().size());
+                   "Select operation found wrong number of results.");
     XCTAssertEqual(result.listContents().size(), 2,
                    "List returns wrong results.");
     
@@ -479,7 +487,7 @@
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), relation.getContents().size(),
-                   "Select operation found %lu results, not 2.", result.getContents().size());
+                   "Select operation found wrong number of results.");
     XCTAssertEqual(result.listContents().size(), relation.listContents().size(),
                    "List returns wrong results.");
     
@@ -495,6 +503,20 @@
     std::vector<size_t> veryBigQuery = { 15, 30 }; // σ ?=?
     result = relation.select({ veryBigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
+    
+    // From in30
+    relation = Relation("SK", Tuple({ "A", "B" }));
+    relation.addTuple(Tuple({ "a", "c" }));
+    relation.addTuple(Tuple({ "b", "c" }));
+    relation.addTuple(Tuple({ "b", "b" }));
+    relation.addTuple(Tuple({ "b", "c" }));
+    
+    std::vector<size_t> matchQuery = { 0, 1 }; // σ A=B
+    result = relation.select({ matchQuery });
+    XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
+                   "Schemes do not match.");
+    XCTAssertEqual(result.getContents().size(), 1,
+                   "Select operation found wrong number of results.");
 }
 
 - (void)testSelectMultipleColumnEquivalence {

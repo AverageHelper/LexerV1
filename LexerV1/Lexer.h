@@ -37,6 +37,7 @@ inline std::vector<Token*> collectedTokensFromFile(std::ifstream& file) {
                 continue;
                 
             case ' ':
+            case '\t':
                 file.ignore();
                 continue;
                 

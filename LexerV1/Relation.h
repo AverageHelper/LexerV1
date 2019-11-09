@@ -12,6 +12,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <sstream>
 #include "Tuple.h"
 
 class Relation {
@@ -86,7 +87,7 @@ public:
     
     bool operator==(const Relation &other);
     
-    std::string toString() const;
+    std::string stringForTuple(Tuple tuple) const;
 };
 
 #endif /* Relation_h */

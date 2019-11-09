@@ -276,6 +276,22 @@ bool Relation::operator==(const Relation &other) {
             getContents() == other.getContents());
 }
 
-std::string Relation::toString() const {
-    return "";
+std::string Relation::stringForTuple(Tuple tuple) const {
+    if (tuple.size() != getColumnCount()) {
+        return "";
+    }
+    
+    std::ostringstream result = std::ostringstream();
+    for (unsigned int i = 0; i < tuple.size(); i += 1) {
+        std::string col = getScheme().at(i);
+        std::string val = tuple.at(i);
+        
+        result << col << "=" << val;
+        if (i < getScheme().size() - 1) {
+            // If more columns, add a comma
+            result << ", ";
+        }
+    }
+    
+    return result.str();
 }
