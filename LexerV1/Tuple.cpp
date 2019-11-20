@@ -20,6 +20,24 @@ Tuple::Tuple(const Tuple &other) {
     }
 }
 
+Tuple Tuple::combinedWith(Tuple other) const {
+    Tuple result = Tuple();
+    
+    for (auto v : *this) {
+        if (result.firstIndexOf(v) == -1) {
+            result.push_back(v);
+        }
+    }
+    
+    for (auto v : other) {
+        if (result.firstIndexOf(v) == -1) {
+            result.push_back(v);
+        }
+    }
+    
+    return result;
+}
+
 int Tuple::firstIndexOf(std::string val) {
     for (unsigned int i = 0; i < size(); i += 1) {
         if (this->at(i) == val) {

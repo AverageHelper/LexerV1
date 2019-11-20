@@ -11,11 +11,15 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 class Tuple: public std::vector<std::string> {
 public:
     Tuple(std::vector<std::string> contents = {});
     Tuple(const Tuple &other);
+    
+    /// Concatinates the values of @c other uniquely with the receiver's contents.
+    Tuple combinedWith(Tuple other) const;
     
     /// Returns the first index where @c val can be found in the tuple.
     ///

@@ -54,8 +54,6 @@ int main(int argc, char* argv[]) {
     iFS.close();
     
 //    printTokens(tokens);
-//    releaseTokens(tokens);
-//    return 0;
     
     DatalogCheck checker = DatalogCheck();
     DatalogProgram* program = checker.checkGrammar(tokens);
@@ -89,6 +87,9 @@ int main(int argc, char* argv[]) {
             relation->addTuple(tuple);
         }
     }
+    
+    // Evaluate Rules
+    
     
     // Evaluate Queries
     for (unsigned int queryIdx = 0; queryIdx < program->getQueries().size(); queryIdx += 1) {
@@ -161,20 +162,18 @@ int main(int argc, char* argv[]) {
         }
         
         // If there are variables in the query, output the tuples from the resulting relation.
-//        if (!matchValues.empty()) {
-            for (Tuple t : renamed.getContents()) {
-                std::cout << "  " << renamed.stringForTuple(t) << std::endl;
-            }
-//        }
+        for (Tuple t : renamed.getContents()) {
+            std::cout << "  " << renamed.stringForTuple(t) << std::endl;
+        }
     }
     
+    // Free our memory.
     if (program != nullptr) {
         delete program;
     }
     delete database;
-    
-    // Free our memory.
     releaseTokens(tokens);
+    
     return 0;
 }
 

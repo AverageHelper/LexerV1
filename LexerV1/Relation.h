@@ -85,9 +85,13 @@ public:
     /// If @c newCol exceeds the scheme's last index, swaps with the last column instead.
     void swapColumns(size_t oldCol, size_t newCol);
     
-    bool operator==(const Relation &other);
+    Relation joinedWith(Relation other) const;
+    Relation unionWith(Relation other) const;
     
     std::string stringForTuple(Tuple tuple) const;
+    
+    bool operator ==(const Relation &other);
+    bool operator !=(const Relation &other);
 };
 
 #endif /* Relation_h */

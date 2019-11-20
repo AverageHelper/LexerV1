@@ -270,12 +270,6 @@ Relation Relation::project(Tuple scheme) const {
     return result;
 }
 
-bool Relation::operator==(const Relation &other) {
-    return (getName() == other.getName() &&
-            getScheme() == other.getScheme() &&
-            getContents() == other.getContents());
-}
-
 std::string Relation::stringForTuple(Tuple tuple) const {
     if (tuple.size() != getColumnCount()) {
         return "";
@@ -294,4 +288,53 @@ std::string Relation::stringForTuple(Tuple tuple) const {
     }
     
     return result.str();
+}
+
+Relation Relation::joinedWith(Relation other) const {
+    Tuple newScheme = getScheme().combinedWith(other.getScheme());
+    Relation result = Relation(getName(), newScheme);
+    
+    for (Tuple t1 : this->getContents()) {
+        for (Tuple t2 : other.getContents()) {
+            
+            Tuple combined = t1.combinedWith(t2);
+            // Combined will have too many elements if it could not find matching column values.
+            //   Our join will return empty if that is the case.
+            result.addTuple(combined);
+            
+        }
+    }
+    
+    return result;
+}
+
+Relation Relation::unionWith(Relation other) const {
+    std::set<std::string> newSchemeContents = std::set<std::string>();
+    for (auto str : getScheme()) {
+        newSchemeContents.insert(str);
+    }
+    for (auto str : other.getScheme()) {
+        newSchemeContents.insert(str);
+    }
+    Tuple newScheme = Tuple();
+    
+    for (auto item : newSchemeContents) {
+        newScheme.push_back(item);
+    }
+    
+    Relation result = Relation(getName(), newScheme);
+    
+    
+    
+    return result;
+}
+
+bool Relation::operator ==(const Relation &other) {
+    return (getName() == other.getName() &&
+            getScheme() == other.getScheme() &&
+            getContents() == other.getContents());
+}
+
+bool Relation::operator !=(const Relation &other) {
+    return !(*this == other);
 }

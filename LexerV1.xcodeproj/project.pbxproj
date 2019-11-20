@@ -350,6 +350,13 @@
 			path = "100 Bucket";
 			sourceTree = "<group>";
 		};
+		858FB27D23845BF500E11C69 /* Join and Union Test Files */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Join and Union Test Files";
+			sourceTree = "<group>";
+		};
 		85D0BCEA2327099E00FEE62C = {
 			isa = PBXGroup;
 			children = (
@@ -388,6 +395,7 @@
 				85F946DF2363BAAC006C460E /* Lexer Test Files */,
 				8548AA112367680F00D49AA3 /* Grammar Test Files */,
 				85F953722370D81B008D5D69 /* Relation Test Files */,
+				858FB27D23845BF500E11C69 /* Join and Union Test Files */,
 				85F946E02363BACD006C460E /* TestLexer.mm */,
 				85F946D82363B6D3006C460E /* TestGrammar.mm */,
 				85F953732370D833008D5D69 /* TestRelations.mm */,

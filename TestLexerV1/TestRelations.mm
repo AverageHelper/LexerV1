@@ -750,4 +750,117 @@
     delete swapped;
 }
 
+// MARK: - Join
+
+- (void)testJoinTuples {
+    Tuple one = Tuple({ "A", "B", "C" });
+    
+    Tuple commonCols = Tuple({ "C", "D", "E" });
+    Tuple joined = one.combinedWith(commonCols);
+    XCTAssertEqual(joined, Tuple({ "A", "B", "C", "D", "E" }), "Failed to join properly.");
+    
+    Tuple uncommonCols = Tuple({ "D", "E", "F" });
+    joined = one.combinedWith(uncommonCols);
+    XCTAssertEqual(joined, Tuple({ "A", "B", "C", "D", "E", "F" }), "Failed to join properly.");
+}
+
+- (void)testJoinRelationsWithOneCommonColumn {
+    Relation relation = Relation("R", Tuple({ "N", "A", "P" }));
+    relation.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234" }));
+    relation.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678" }));
+    relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" }));
+    relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" }));
+    
+    Relation students = Relation("R", Tuple({ "S", "N" }));
+    students.addTuple(Tuple({ "1111", "C. Brown" }));
+    students.addTuple(Tuple({ "2222", "L. Van Pelt" }));
+    students.addTuple(Tuple({ "3333", "P. Patty" }));
+    students.addTuple(Tuple({ "4444", "Snoopy" }));
+    
+    Relation joined = relation.joinedWith(students);
+    XCTAssertEqual(joined.getName(), students.getName(), "Name doesn't match.");
+    XCTAssertEqual(joined.getColumnCount(), 4, "Wrong number of columns after join.");
+    XCTAssertEqual(joined.getScheme(), Tuple({ "N", "A", "P", "S" }), "Wrong scheme after join.");
+    
+    joined.addTuple(Tuple({ "C. Brown", "12 Apple St.", "555-1234", "1111" }));
+    joined.addTuple(Tuple({ "L. Van Pelt", "34 Pear Ave.", "555-5678", "2222" }));
+    joined.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999", "3333" }));
+    joined.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234", "4444" }));
+    
+    XCTAssertEqual(joined.getContents().size(), relation.getContents().size(),
+                   "Wrong rows after join.");
+}
+
+- (void)testJoinRelationsWithManyCommonColumns {
+    Relation relation = Relation("R", Tuple({ "A", "B", "C", "D" }));
+    relation.addTuple(Tuple({ "1", "2", "3", "4" }));
+    relation.addTuple(Tuple({ "5", "6", "7", "8" }));
+    relation.addTuple(Tuple({ "9", "10", "11", "12" }));
+    
+    Relation identical = Relation("S", Tuple({ "A", "B", "C", "D" }));
+    identical.addTuple(Tuple({ "1", "2", "3", "4" }));
+    identical.addTuple(Tuple({ "5", "6", "7", "8" }));
+    identical.addTuple(Tuple({ "9", "10", "11", "12" }));
+    
+    XCTAssertEqual(relation.getContents(), identical.getContents(), "Test relations aren't the same.");
+    Relation joined = relation.joinedWith(identical);
+    XCTAssert(relation == joined, "Joined relations aren't identical.");
+    
+    Relation partial = Relation("P", Tuple({ "C", "D", "E", "F" }));
+    partial.addTuple(Tuple({ "3", "4", "16", "24" }));
+    partial.addTuple(Tuple({ "7", "8", "15", "25" }));
+    partial.addTuple(Tuple({ "11", "12", "14", "26" }));
+    
+    joined = relation.joinedWith(partial);
+    XCTAssertEqual(joined.getScheme(), Tuple({ "A", "B", "C", "D", "E", "F" }),
+                   "Schemes don't match after join.");
+    XCTAssertEqual(joined.getContents().size(), relation.getContents().size(),
+                   "Contents don't match after join.");
+    joined.addTuple(Tuple({ "1", "2", "3", "4", "16", "24" }));
+    joined.addTuple(Tuple({ "5", "6", "7", "8", "15", "25" }));
+    joined.addTuple(Tuple({ "9", "10", "11", "12", "14", "26" }));
+    XCTAssertEqual(joined.getContents().size(), relation.getContents().size(),
+                   "Contents differ after join.");
+    
+    Relation uncommonContents = Relation("P", Tuple({ "C", "D", "E", "F" }));
+    uncommonContents.addTuple(Tuple({ "13", "28", "16", "24" }));
+    uncommonContents.addTuple(Tuple({ "17", "18", "15", "25" }));
+    uncommonContents.addTuple(Tuple({ "111", "112", "14", "26" }));
+    
+    joined = relation.joinedWith(uncommonContents);
+    XCTAssertEqual(joined.getScheme(), Tuple({ "A", "B", "C", "D", "E", "F" }),
+                   "Schemes don't match after join.");
+    XCTAssertEqual(joined.getContents().size(), 0, "Retains contents after join.");
+}
+
+- (void)testJoinRelationsWithNoCommonColumns {
+    Relation relation = Relation("R", Tuple({ "A", "B", "C", "D" }));
+    relation.addTuple(Tuple({ "1", "2", "3", "4" }));
+    relation.addTuple(Tuple({ "5", "6", "7", "8" }));
+    relation.addTuple(Tuple({ "9", "10", "11", "12" }));
+    
+    Relation different = Relation("S", Tuple({ "E", "F", "G" }));
+    different.addTuple(Tuple({ "15", "16", "24" }));
+    different.addTuple(Tuple({ "17", "18", "28" }));
+    different.addTuple(Tuple({ "21", "22", "32" }));
+    
+    Relation joined = relation.joinedWith(different);
+    // Should do a Cartesian product
+    XCTAssert(relation != joined, "No change after join.");
+    XCTAssertEqual(joined.getScheme(), Tuple({ "A", "B", "C", "D", "E", "F", "G" }));
+    XCTAssertEqual(joined.getContents().size(), 9, "Wrong number of tuples after join.");
+    
+    joined.addTuple(Tuple({ "1", "2", "3", "4", "15", "16", "24" }));
+    joined.addTuple(Tuple({ "5", "6", "7", "8", "15", "16", "24" }));
+    joined.addTuple(Tuple({ "9", "10", "11", "12", "15", "16", "24" }));
+    joined.addTuple(Tuple({ "1", "2", "3", "4", "17", "18", "28" }));
+    joined.addTuple(Tuple({ "5", "6", "7", "8", "17", "18", "28" }));
+    joined.addTuple(Tuple({ "9", "10", "11", "12", "17", "18", "28" }));
+    joined.addTuple(Tuple({ "1", "2", "3", "4", "21", "22", "32" }));
+    joined.addTuple(Tuple({ "5", "6", "7", "8", "21", "22", "32" }));
+    joined.addTuple(Tuple({ "9", "10", "11", "12", "21", "22", "32" }));
+    
+    XCTAssertEqual(joined.getContents().size(), 9, "Incorrect tuples after join.");
+}
+
 @end
