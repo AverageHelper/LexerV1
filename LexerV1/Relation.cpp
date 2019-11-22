@@ -189,13 +189,16 @@ bool Relation::vectorContainsValue(const std::vector<std::string> &domain,
 }
 
 void Relation::stripExtraColsFromScheme(Tuple &otherScheme) const {
-    // Evaluate each column in given scheme.
-    Tuple result = {};
-    
     if (otherScheme.empty()) {
         return; // Empty scheme? That's ok.
     }
+    if (getScheme().empty()) {
+        otherScheme.clear(); // Empty relation? Strip otherScheme.
+        return;
+    }
     
+    // Evaluate each column in given scheme.
+    Tuple result = {};
     Tuple dirtyScheme = otherScheme;
     otherScheme.clear();
     
@@ -231,6 +234,10 @@ int Relation::indexForColumnInTuple(std::string col, const Tuple &domain) const 
 }
 
 void Relation::swapColumns(size_t oldCol, size_t newCol) {
+    if (getScheme().empty()) {
+        return; // Empty scheme? Done.
+    }
+    
     if (oldCol >= getColumnCount()) {
         oldCol = getColumnCount() - 1; // Too large? Use the end instead.
     }
@@ -285,6 +292,10 @@ void Relation::keepOnlyColumnsUntil(size_t col) {
 }
 
 Relation Relation::project(Tuple scheme) const {
+    if (scheme == getScheme()) {
+        return *this; // Same scheme? Return self.
+    }
+    
     Tuple current = getScheme();
     Tuple newScheme = scheme;
     
@@ -305,7 +316,7 @@ Relation Relation::project(Tuple scheme) const {
 
 std::string Relation::stringForTuple(Tuple tuple) const {
     if (tuple.size() != getColumnCount()) {
-        return "";
+        return ""; // Tuple couldn't be one of ours? Empty string.
     }
     
     std::ostringstream result = std::ostringstream();
@@ -324,10 +335,10 @@ std::string Relation::stringForTuple(Tuple tuple) const {
 }
 
 Relation Relation::joinedWith(Relation other) const {
-    if (this->getName() == other.getName() &&
-        this->getScheme() == other.getScheme() &&
+//    if (this->getName() == other.getName() &&
+    if (this->getScheme() == other.getScheme() &&
         this->getContents() == other.getContents()) {
-        return *this;
+        return *this; // Identical scheme? Return self.
     }
     
     Tuple newScheme = getScheme().combinedWith(other.getScheme());

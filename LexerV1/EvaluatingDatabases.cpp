@@ -122,11 +122,11 @@ std::string evaluateRules(Database *database, DatalogProgram *program) {
     bool didAddToDatabase = true;
     int passCount = 0;
     
+    std::map<std::string, std::set<std::string>> printedTuples
+        = std::map<std::string, std::set<std::string>>();
+    
     while (didAddToDatabase) {
         didAddToDatabase = false;
-        
-        std::map<std::string, std::set<std::string>> printedTuples
-            = std::map<std::string, std::set<std::string>>();
         
         for (auto rule : program->getRules()) {
             
@@ -172,6 +172,11 @@ std::string evaluateRules(Database *database, DatalogProgram *program) {
             }
             
             //  Union with the relation in the database
+            for (auto t : headRelation->getContents()) {
+                std::string key = ruleRelation.getName();
+                std::string output = headRelation->stringForTuple(t);
+                printedTuples[key].insert(output);
+            }
             ruleRelation = headRelation->unionWith(ruleRelation);
             if (database->addRelation(new Relation(ruleRelation))) {
                 didAddToDatabase = true; // True if we actually changed something.

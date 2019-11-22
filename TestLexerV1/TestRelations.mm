@@ -304,23 +304,38 @@
 
 // MARK: - Efficiency
 
-- (void)testBasicRuleEvaluation {
+- (void)testBasicRuleEvaluation54 {
+    NSString *domain = @"Rule Evaluations";
+    NSString *prefix = @"in";
+    
     [self measureBlock:^{
         [self runFactsFromInputFile:54 withPrefix:prefix inDomain:domain evaluatingRules:true];
     }];
+}
+
+- (void)testBasicRuleEvaluation55 {
+    NSString *domain = @"Rule Evaluations";
+    NSString *prefix = @"in";
+    
     [self measureBlock:^{
         [self runFactsFromInputFile:55 withPrefix:prefix inDomain:domain evaluatingRules:true];
     }];
+}
+
+- (void)testBasicRuleEvaluation61 {
+    NSString *domain = @"Rule Evaluations";
+    NSString *prefix = @"in";
+    
     [self measureBlock:^{
         [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain evaluatingRules:true];
     }];
 }
 
-- (void)testLongRunningDatalog {
-    [self measureBlock:^{
-        [self runFactsFromInputFile:88 withPrefix:@"in" inDomain:@"Rule Evaluations" evaluatingRules:true];
-    }];
-}
+//- (void)testLongRunningDatalog {
+//    [self measureBlock:^{
+//        [self runFactsFromInputFile:88 withPrefix:@"in" inDomain:@"Rule Evaluations" evaluatingRules:true];
+//    }];
+//}
 
 // MARK: - Structures
 

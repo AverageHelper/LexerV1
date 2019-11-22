@@ -23,7 +23,7 @@ private:
     
     /// Removes columns from @c otherScheme which are not found in the relation's scheme.
     ///
-    /// Has no effect on the relation's solumns or scheme.
+    /// Has no effect on the relation's columns or scheme.
     void stripExtraColsFromScheme(Tuple &otherScheme) const;
     
     /// Returns @c true if @c domain contains @c query.
