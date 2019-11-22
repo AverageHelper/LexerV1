@@ -41,29 +41,34 @@ public:
     ~Relation();
     
     std::string getName() const;
-    void setName(const std::string newName);
-    Tuple getScheme() const;
+    void setName(const std::string& newName);
+    const Tuple& getScheme() const;
     size_t getColumnCount() const;
     
     /// Adds the @c Tuple to the relation.  The tuple @b must contain exactly the number of elements specified in the relation.
     bool addTuple(Tuple element);
-    std::set<Tuple> getContents() const;
-    std::vector<Tuple> listContents() const;
+    const std::set<Tuple>& getContents() const;
+    const std::vector<Tuple> listContents() const;
     
-    int indexForColumnInScheme(std::string col) const;
+    int indexForColumnInScheme(const std::string &col) const;
     
     
     /// Given a name @e in the schema, and a new name @e not in the schema, pretend the name is actually the new name.
     ///
     /// @c newCol must not already exist in the schema, else no change will occur.
-    Relation rename(std::string oldCol, std::string newCol) const;
+    Relation renamed(const std::string& oldCol, const std::string& newCol) const;
     
     /// Replaces the receiver's scheme with values in @c newScheme.  If one of the values in @c newScheme is an empty string,
     /// the present scheme's value is preserved.  If there are duplicate values in @c newScheme, then only the first will be made part
     /// of the resulting relation's scheme.
     ///
     /// The new scheme must be the same length as the receiver's old scheme, else no change will occur.
-    Relation rename(Tuple newScheme) const;
+    Relation renamed(const Tuple& newScheme) const;
+    
+    /// Renames the relation in-place.
+    void rename(const std::string& oldCol, const std::string& newCol);
+    /// Renames the relation in-place.
+    void rename(const Tuple& newScheme);
     
     
     /// Get rows whose values match each equivalence pair given in @c queries.
@@ -73,7 +78,10 @@ public:
     /// A query is ignored if its column index is not valid for the relation's scheme.
     ///
     /// @returns A new @c Relation whose rows match the query.
-    Relation select(std::vector< std::pair<size_t, std::string> > queries) const;
+    Relation selecting(const std::vector< std::pair<size_t, std::string> >& queries) const;
+    
+    /// Selects rows from the relation in-place.
+    void select(const std::vector< std::pair<size_t, std::string> >& queries);
     
     
     /// Get rows whose values match each equivalence pair given in @c queries.
@@ -84,21 +92,30 @@ public:
     /// A query is ignored if either column index is not valid for the relation's scheme.
     ///
     /// @returns A new @c Relation whose rows match the query.
-    Relation select(std::vector<std::vector<size_t>> queries) const;
+    Relation selecting(const std::vector<std::vector<size_t>>& queries) const;
+    
+    /// Selects rows from the relation in-place.
+    void select(const std::vector<std::vector<size_t>>& queries);
     
     
     /// Keep only the columns from the relation that correspond to the positions of the variables in the query.
-    Relation project(Tuple otherScheme) const;
+    Relation projecting(const Tuple& otherScheme) const;
+    
+    /// Keeps in the receiver only the columns from the relation that correspond to the positions of the variables in the query.
+    void project(const Tuple& otherScheme);
     
     /// Swaps the relation's scheme and values at index @c oldCol with @c newCol.
     ///
     /// If @c newCol exceeds the scheme's last index, swaps with the last column instead.
     void swapColumns(size_t oldCol, size_t newCol);
     
-    Relation joinedWith(Relation other) const;
-    Relation unionWith(Relation other) const;
+    /// Performs a natural join to another relation.
+    Relation joinedWith(const Relation &other) const;
     
-    std::string stringForTuple(Tuple tuple) const;
+    /// Unions the contents of the receiver with another relation of the same scheme.
+    Relation unionWith(const Relation &other) const;
+    
+    std::string stringForTuple(const Tuple &tuple) const;
     
     bool operator ==(const Relation &other);
     bool operator !=(const Relation &other);

@@ -298,7 +298,7 @@
     [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain evaluatingRules:true];
     [self runFactsFromInputFile:62 withPrefix:prefix inDomain:domain evaluatingRules:true];
     
-    // This runs long. Measure its runtime.
+    // This should run for at least an hour.
     // [self runFactsFromInputFile:88 withPrefix:prefix inDomain:domain evaluatingRules:true];
 }
 
@@ -330,12 +330,6 @@
         [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain evaluatingRules:true];
     }];
 }
-
-//- (void)testLongRunningDatalog {
-//    [self measureBlock:^{
-//        [self runFactsFromInputFile:88 withPrefix:@"in" inDomain:@"Rule Evaluations" evaluatingRules:true];
-//    }];
-//}
 
 // MARK: - Structures
 
@@ -452,10 +446,10 @@
     relation.addTuple(Tuple({ "1", "2", "3" }));
     
     // Renaming outside of the domain should do nothing
-    XCTAssert(relation == relation.rename("D", "X"),
+    XCTAssert(relation == relation.renamed("D", "X"),
               "Failed to escape gracefully.");
     
-    Relation renamed = relation.rename("A", "X");
+    Relation renamed = relation.renamed("A", "X");
     XCTAssertEqual(relation.getScheme().at(0), "A");
     XCTAssertEqual(renamed.getScheme().at(0), "X");
     XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
@@ -463,7 +457,7 @@
     XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
                    "Wrong contents after rename.");
     
-    renamed = relation.rename("C", "X");
+    renamed = relation.renamed("C", "X");
     XCTAssertEqual(relation.getScheme().at(2), "C");
     XCTAssertEqual(renamed.getScheme().at(2), "X");
     XCTAssertEqual(relation.getContents().size(), renamed.getContents().size(),
@@ -471,7 +465,7 @@
     XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
                    "Wrong contents after rename.");
     
-    renamed = relation.rename("B", "A");
+    renamed = relation.renamed("B", "A");
     XCTAssert(relation == renamed, "Inadvertently duplicated scheme column.");
     XCTAssertEqual(renamed.getScheme(), Tuple({ "A", "B", "C" }),
                    "Inadvertently duplicated scheme column.");
@@ -480,7 +474,7 @@
     XCTAssertEqual(relation.listContents().at(0), Tuple({ "1", "2", "3" }),
                    "Wrong contents after rename.");
     
-    renamed = relation.rename("B", "C");
+    renamed = relation.renamed("B", "C");
     XCTAssert(relation == renamed, "Inadvertently duplicated scheme column.");
     XCTAssertEqual(renamed.getScheme(), Tuple({ "A", "B", "C" }),
                    "Inadvertently duplicated scheme column.");
@@ -508,7 +502,7 @@
     
     size_t col = static_cast<size_t>(colIfFound);
     std::pair<size_t, std::string> query = std::make_pair(col, "C. Brown"); // σ N='C. Brown'
-    Relation result = relation.select({ query });
+    Relation result = relation.selecting({ query });
     
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
@@ -522,7 +516,7 @@
     
     col = static_cast<size_t>(colIfFound);
     query = std::make_pair(col, "12 Apple St."); // σ A='12 Apple St.'
-    result = relation.select({ query });
+    result = relation.selecting({ query });
     
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
@@ -532,7 +526,7 @@
     
     // Nonexistent address
     query = std::make_pair(col, "42 Wallaby Way"); // σ A='42 Wallaby Way'
-    result = relation.select({ query });
+    result = relation.selecting({ query });
     
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
@@ -551,7 +545,7 @@
     col = static_cast<size_t>(colIfFound);
     std::pair<size_t, std::string> phoneQuery = std::make_pair(col, "555-1234"); // σ P='555-1234'
     
-    result = relation.select({ nameQuery, phoneQuery });
+    result = relation.selecting({ nameQuery, phoneQuery });
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), 1,
@@ -559,11 +553,11 @@
     
     // Out of range
     std::pair<size_t, std::string> bigQuery = std::make_pair(3, "Snoopy"); // σ ?='Snoopy'
-    result = relation.select({ bigQuery });
+    result = relation.selecting({ bigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
     
     std::pair<size_t, std::string> veryBigQuery = std::make_pair(15, "Snoopy"); // σ ?='Snoopy'
-    result = relation.select({ veryBigQuery });
+    result = relation.selecting({ veryBigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
 }
 
@@ -586,7 +580,7 @@
     size_t col2 = static_cast<size_t>(colIfFound);
     
     std::vector<size_t> matchingCols = { col1, col2 }; // σ A=B
-    Relation result = relation.select({ matchingCols });
+    Relation result = relation.selecting({ matchingCols });
     
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
@@ -597,7 +591,7 @@
     
     // Reverse!
     std::vector<size_t> matchingColsReverse = { col2, col1 }; // σ B=A
-    result = relation.select({ matchingColsReverse });
+    result = relation.selecting({ matchingColsReverse });
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), 2,
@@ -607,7 +601,7 @@
     
     // Same column
     std::vector<size_t> sameCol = { col1, col1 }; // σ A=A
-    result = relation.select({ sameCol });
+    result = relation.selecting({ sameCol });
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), relation.getContents().size(),
@@ -617,15 +611,15 @@
     
     // Out of range
     std::vector<size_t> firstlyBigQuery = { 2, 0 }; // σ ?=A
-    result = relation.select({ firstlyBigQuery });
+    result = relation.selecting({ firstlyBigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
     
     std::vector<size_t> secondlyBigQuery = { 0, 2 }; // σ A=?
-    result = relation.select({ secondlyBigQuery });
+    result = relation.selecting({ secondlyBigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
     
     std::vector<size_t> veryBigQuery = { 15, 30 }; // σ ?=?
-    result = relation.select({ veryBigQuery });
+    result = relation.selecting({ veryBigQuery });
     XCTAssert(result == relation, "Bad select made unexpected changes.");
     
     // From in30
@@ -636,7 +630,7 @@
     relation.addTuple(Tuple({ "b", "c" }));
     
     std::vector<size_t> matchQuery = { 0, 1 }; // σ A=B
-    result = relation.select({ matchQuery });
+    result = relation.selecting({ matchQuery });
     XCTAssertEqual(result.getColumnCount(), relation.getColumnCount(),
                    "Schemes do not match.");
     XCTAssertEqual(result.getContents().size(), 1,
@@ -655,31 +649,31 @@
     
     // Name(t,t,t,t)?
     std::vector<size_t> allColsMatch = { 0, 1, 2, 3 }; // σ A=B,B=C,C=D
-    Relation result = relation.select({ allColsMatch });
+    Relation result = relation.selecting({ allColsMatch });
     XCTAssertEqual(result.getContents().size(), 1, "Matched wrong number of rows.");
     
     // Name(s,s,s,'1')?
     std::vector<size_t> matchABC = { 0, 1, 2 }; // σ A=B,B=C
     std::pair<size_t, std::string> colVal1 = std::make_pair(3, "1"); // σ D='1'
-    result = relation.select({ matchABC });
-    result = result.select({ colVal1 });
+    result = relation.selecting({ matchABC });
+    result = result.selecting({ colVal1 });
     XCTAssertEqual(result.getContents().size(), 2, "Matched wrong number of rows.");
     
     // Name('2',t,s,'3')?
     colVal1 = std::make_pair(0, "2"); // σ A='2'
     std::pair<size_t, std::string> colVal2 = std::make_pair(3, "3"); // σ D='3'
-    result = relation.select({ colVal1, colVal2 });
+    result = relation.selecting({ colVal1, colVal2 });
     XCTAssertEqual(result.getContents().size(), 1, "Matched wrong number of rows.");
     
     // Name(p,p,q,r)?
     std::vector<size_t> matchAB = { 0, 1 }; // σ A=B
-    result = relation.select({ matchAB });
+    result = relation.selecting({ matchAB });
     XCTAssertEqual(result.getContents().size(), 4, "Matched wrong number of rows.");
     
     // Name(p,p,'1',q)?
     colVal1 = std::make_pair(2, "1"); // σ C='1'
-    result = relation.select({ matchAB });
-    result = result.select({ colVal1 });
+    result = relation.selecting({ matchAB });
+    result = result.selecting({ colVal1 });
     XCTAssertEqual(result.getContents().size(), 2, "Matched wrong number of rows.");
 }
 
@@ -695,7 +689,7 @@
     relation.addTuple(Tuple({ "1", "5", "8", "3" }));
     
     Tuple testScheme = Tuple({ "bunny" });
-    Relation projected = relation.project(testScheme); // π 'bunny'
+    Relation projected = relation.projecting(testScheme); // π 'bunny'
     
     XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 1, "Wrong number of columns projected.");
@@ -708,7 +702,7 @@
     XCTAssertEqual(projected.getContents().size(), 4, "Wrong number of rows after projection.");
     
     testScheme = Tuple({ "cat", "bird", "bunny" });
-    projected = relation.project(testScheme); // π 'cat','bird','bunny'
+    projected = relation.projecting(testScheme); // π 'cat','bird','bunny'
     
     XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 3, "Wrong number of columns projected.");
@@ -730,7 +724,7 @@
     relation.addTuple(Tuple({ "6", "7", "4" }));
     
     testScheme = Tuple({ "fish", "dog" });
-    projected = relation.project(testScheme); // π 'fish','dog'
+    projected = relation.projecting(testScheme); // π 'fish','dog'
     
     XCTAssertEqual(projected.getScheme(), testScheme, "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 2, "Wrong number of columns projected.");
@@ -750,7 +744,7 @@
     relation.addTuple(Tuple({ "P. Patty", "56 Grape Blvd.", "555-9999" }));
     relation.addTuple(Tuple({ "Snoopy", "12 Apple St.", "555-1234" }));
     
-    projected = relation.project(Tuple({ "A" }));
+    projected = relation.projecting(Tuple({ "A" }));
     
     XCTAssertEqual(projected.getScheme(), Tuple({ "A" }), "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 1, "Wrong number of column safter projection.");
@@ -762,7 +756,7 @@
     }
     
     // Test reordering
-    projected = relation.project(Tuple({ "P", "A", "N" }));
+    projected = relation.projecting(Tuple({ "P", "A", "N" }));
     XCTAssertEqual(projected.getScheme(), Tuple({ "P", "A", "N" }),
                    "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), relation.getColumnCount(),
@@ -785,7 +779,7 @@
                    "Wrong rows after projection.");
     
     // Test columns outside of domain
-    projected = relation.project(Tuple({ "B", "C", "D" }));
+    projected = relation.projecting(Tuple({ "B", "C", "D" }));
     XCTAssert(projected.getScheme().empty(),
               "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 0,
@@ -793,7 +787,7 @@
     XCTAssert(projected.getContents().empty(),
                    "Wrong number of rows after projection.");
     
-    projected = relation.project(Tuple());
+    projected = relation.projecting(Tuple());
     XCTAssert(projected.getScheme().empty(),
               "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 0,
@@ -802,7 +796,7 @@
                    "Wrong number of rows after projection.");
     
     Relation empty = Relation("Empty");
-    projected = empty.project(Tuple({ "N", "A", "P" }));
+    projected = empty.projecting(Tuple({ "N", "A", "P" }));
     XCTAssert(projected.getScheme().empty(),
               "Wrong scheme after projection.");
     XCTAssertEqual(projected.getColumnCount(), 0,
@@ -811,7 +805,7 @@
                    "Wrong number of rows after projection.");
     
     // Test duplicate columns
-    projected = relation.project(Tuple({ "A", "P", "A", "A" }));
+    projected = relation.projecting(Tuple({ "A", "P", "A", "A" }));
     XCTAssertEqual(projected.getColumnCount(), 2, "Wrong column count after projection.");
     XCTAssertEqual(projected.getContents().size(), 3, "Wrong row count after projection.");
     

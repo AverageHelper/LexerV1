@@ -10,8 +10,8 @@
 
 Relation::Relation(const Relation &other) {
     this->name = other.name;
-    this->contents = other.contents;
-    this->scheme = other.scheme;
+    this->contents = std::set<Tuple>(other.contents);
+    this->scheme = Tuple(other.scheme);
 }
 
 Relation::Relation(const std::string name, Tuple scheme) {
@@ -28,7 +28,7 @@ std::string Relation::getName() const {
     return this->name;
 }
 
-void Relation::setName(const std::string newName) {
+void Relation::setName(const std::string &newName) {
     this->name = newName;
 }
 
@@ -36,7 +36,7 @@ size_t Relation::getColumnCount() const {
     return getScheme().size();
 }
 
-Tuple Relation::getScheme() const {
+const Tuple& Relation::getScheme() const {
     return scheme;
 }
 
@@ -49,11 +49,11 @@ bool Relation::addTuple(Tuple element) {
     return true;
 }
 
-std::set<Tuple> Relation::getContents() const {
+const std::set<Tuple>& Relation::getContents() const {
     return this->contents;
 }
 
-std::vector<Tuple> Relation::listContents() const {
+const std::vector<Tuple> Relation::listContents() const {
     std::vector<Tuple> result = {};
     
     for (auto t : getContents()) {
@@ -63,22 +63,32 @@ std::vector<Tuple> Relation::listContents() const {
     return result;
 }
 
-Relation Relation::rename(std::string oldCol, std::string newCol) const {
+// MARK: - Rename
+
+void Relation::rename(const std::string& oldCol, const std::string& newCol) {
     Tuple newScheme = getScheme();
+    std::set<std::string> newSchemeContents = std::set<std::string>();
     
     for (size_t i = 0; i < newScheme.size(); i += 1) {
         if (newScheme.at(i) == oldCol) {
             newScheme.at(i) = newCol;
+            newSchemeContents.insert(newCol);
+            
+        } else {
+            newSchemeContents.insert(newScheme.at(i));
         }
     }
     
-    return rename(newScheme);
+    if (newScheme.size() == newSchemeContents.size()) {
+        // Mutate only if we have no duplicates.
+        this->scheme = newScheme;
+    }
 }
 
-Relation Relation::rename(Tuple newScheme) const {
+void Relation::rename(const Tuple& newScheme) {
     if (newScheme.size() != getScheme().size() || // Wrong size, or
         newScheme == getScheme()) { // Identical scheme
-        return *this;
+        return;
     }
     
     Tuple resultScheme = getScheme();
@@ -98,28 +108,37 @@ Relation Relation::rename(Tuple newScheme) const {
     
     if (resultValues.size() == resultScheme.size()) {
         // We have no duplicates! Send it off.
-        Relation result = Relation(name, resultScheme);
-        result.contents = getContents();
-        return result;
-        
-    } else {
-        // Duplicate values! Do nothing.
-        return *this;
+        this->scheme = resultScheme;
     }
 }
 
-Relation Relation::select(std::vector< std::pair<size_t, std::string> > queries) const {
-    Relation result = Relation(getName(), getScheme());
+Relation Relation::renamed(const std::string& oldCol,
+                           const std::string& newCol) const {
+    Relation result = Relation(*this);
+    result.rename(oldCol, newCol);
+    return result;
+}
+
+Relation Relation::renamed(const Tuple& newScheme) const {
+    Relation result = Relation(*this);
+    result.rename(newScheme);
+    return result;
+}
+
+// MARK: - Select
+
+void Relation::select(const std::vector< std::pair<size_t, std::string> >& queries) {
+    std::set<Tuple> result = std::set<Tuple>();
     
     // Evaluate each tuple
     for (auto t : getContents()) {
         bool isMatch = true;
-
+        
         for (auto query : queries) {
             size_t col = query.first;
             std::string val = query.second;
             
-            if (col >= result.getColumnCount()) {
+            if (col >= getColumnCount()) {
                 continue; // Too big? Next query.
             }
             if (t.at(col) != val) {
@@ -129,22 +148,28 @@ Relation Relation::select(std::vector< std::pair<size_t, std::string> > queries)
         }
         
         if (isMatch) {
-            result.addTuple(t);
+            result.insert(t);
         }
     }
     
+    this->contents = result;
+}
+
+Relation Relation::selecting(const std::vector< std::pair<size_t, std::string> >& queries) const {
+    Relation result = Relation(*this);
+    result.select(queries);
     return result;
 }
 
-Relation Relation::select(std::vector< std::vector<size_t> > queries) const {
-    Relation result = Relation(getName(), getScheme());
+void Relation::select(const std::vector<std::vector<size_t>>& queries) {
+//    Relation result = Relation(getName(), getScheme());
+    std::set<Tuple> result = std::set<Tuple>();
     
     // Evaluate each equivalence
     for (std::vector<size_t> query : queries) {
         
         if (query.empty()) { // No query? Select everything.
-            result.contents = getContents();
-            break;
+            return; // Too hasty? Should we evaluate the rest first?
         }
         
         // Make sure that each of the named columns carry the same value, if they're in range.
@@ -153,7 +178,7 @@ Relation Relation::select(std::vector< std::vector<size_t> > queries) const {
             std::string val = "LexerV1.INVALID";
             
             for (auto col : query) {
-                if (col >= result.getColumnCount()) {
+                if (col >= getColumnCount()) {
                     continue; // Too big? Move along.
                 }
                 
@@ -169,13 +194,21 @@ Relation Relation::select(std::vector< std::vector<size_t> > queries) const {
             }
             
             if (hasMatch) {
-                result.addTuple(t);
+                result.insert(t);
             }
         }
     }
     
+    this->contents = result;
+}
+
+Relation Relation::selecting(const std::vector< std::vector<size_t> >& queries) const {
+    Relation result = Relation(*this);
+    result.select(queries);
     return result;
 }
+
+// MARK: - Project
 
 bool Relation::vectorContainsValue(const std::vector<std::string> &domain,
                                    const std::string &query) const {
@@ -219,7 +252,7 @@ void Relation::stripExtraColsFromScheme(Tuple &otherScheme) const {
     otherScheme = result;
 }
 
-int Relation::indexForColumnInScheme(std::string col) const {
+int Relation::indexForColumnInScheme(const std::string &col) const {
     return indexForColumnInTuple(col, getScheme());
 }
 
@@ -291,9 +324,9 @@ void Relation::keepOnlyColumnsUntil(size_t col) {
     contents = stripped;
 }
 
-Relation Relation::project(Tuple scheme) const {
+void Relation::project(const Tuple& scheme) {
     if (scheme == getScheme()) {
-        return *this; // Same scheme? Return self.
+        return; // Same scheme? Return.
     }
     
     Tuple current = getScheme();
@@ -301,20 +334,24 @@ Relation Relation::project(Tuple scheme) const {
     
     stripExtraColsFromScheme(newScheme); // This removes columns that don't exist.
     
-    Relation result = Relation(*this);
-    
     // For each column in scheme, find where it was in our old scheme, then apply.
     for (unsigned int newIndex = 0; newIndex < newScheme.size(); newIndex += 1) {
-        size_t oldIndex = result.indexForColumnInScheme(newScheme.at(newIndex));
-        result.swapColumns(oldIndex, newIndex);
+        size_t oldIndex = indexForColumnInScheme(newScheme.at(newIndex));
+        this->swapColumns(oldIndex, newIndex);
     }
     
-    result.keepOnlyColumnsUntil(newScheme.size());
-    
+    this->keepOnlyColumnsUntil(newScheme.size());
+}
+
+Relation Relation::projecting(const Tuple& scheme) const {
+    Relation result = Relation(*this);
+    result.project(scheme);
     return result;
 }
 
-std::string Relation::stringForTuple(Tuple tuple) const {
+// MARK: - Utility
+
+std::string Relation::stringForTuple(const Tuple& tuple) const {
     if (tuple.size() != getColumnCount()) {
         return ""; // Tuple couldn't be one of ours? Empty string.
     }
@@ -334,7 +371,7 @@ std::string Relation::stringForTuple(Tuple tuple) const {
     return result.str();
 }
 
-Relation Relation::joinedWith(Relation other) const {
+Relation Relation::joinedWith(const Relation& other) const {
 //    if (this->getName() == other.getName() &&
     if (this->getScheme() == other.getScheme() &&
         this->getContents() == other.getContents()) {
@@ -392,7 +429,7 @@ Relation Relation::joinedWith(Relation other) const {
     return result;
 }
 
-Relation Relation::unionWith(Relation other) const {
+Relation Relation::unionWith(const Relation& other) const {
     if (other.getScheme() != getScheme()) {
         // If we aren't union-compatible, return an empty table.
         return Relation(getName(), getScheme());

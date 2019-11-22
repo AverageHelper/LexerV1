@@ -20,7 +20,7 @@ Tuple::Tuple(const Tuple &other) {
     }
 }
 
-Tuple Tuple::combinedWith(Tuple other) const {
+Tuple Tuple::combinedWith(const Tuple& other) const {
     Tuple result = Tuple();
     
     for (auto v : *this) {
@@ -38,7 +38,7 @@ Tuple Tuple::combinedWith(Tuple other) const {
     return result;
 }
 
-int Tuple::firstIndexOf(std::string val) {
+int Tuple::firstIndexOf(const std::string& val) const {
     for (unsigned int i = 0; i < size(); i += 1) {
         if (this->at(i) == val) {
             return i;

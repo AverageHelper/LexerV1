@@ -82,35 +82,30 @@ std::string evaluateQueryItem(Relation &result,
     }
     
     // Make row selections from query
-    Relation selected = result;
     if (!matchColumns.empty()) {
-        selected = selected.select({ matchColumns });
+        result.select({ matchColumns });
     }
     if (!matchValues.empty()) {
-        selected = selected.select(matchValues);
+        result.select(matchValues);
     }
     
     std::ostringstream str = std::ostringstream();
-    if (outputSuccess && selected.getContents().empty()) {
+    if (outputSuccess && result.getContents().empty()) {
         str << "No" << std::endl;
     } else if (outputSuccess) {
-        str << "Yes(" << selected.getContents().size() << ")" << std::endl;
+        str << "Yes(" << result.getContents().size() << ")" << std::endl;
     }
     
     // Project only the columns we want.
-    Relation projected = selected.project(oldCols);
+    result.project(oldCols);
     
     // Rename the columns to the names of the variables found in the query
-    Tuple newScheme = projected.getScheme();
-//    for (auto pair : queryCols) {
+    Tuple newScheme = result.getScheme();
     for (size_t i = 0; i < newCols.size(); i += 1) {
         auto newCol = newCols.at(i);
-//        std::string oldCol = pair.first;
-//        std::string newCol = pair.second;
         newScheme.at(i) = newCol;
-//        projected = projected.rename(oldCol, newCol); // Needs to handle a starting search index
     }
-    result = projected.rename(newScheme);
+    result.rename(newScheme);
     
     return str.str();
 }
@@ -160,7 +155,7 @@ std::string evaluateRules(Database *database, DatalogProgram *program) {
             
             //  Project the columns that appear in the head predicate
             Tuple newScheme = Tuple(rule->getHeadPredicate()->getItems());
-            ruleRelation = ruleRelation.project(newScheme);
+            ruleRelation.project(newScheme);
             ruleRelation.setName(rule->getHeadPredicate()->getIdentifier());
             Relation* headRelation = database->relationWithName(rule->getHeadPredicate()->getIdentifier());
             
@@ -168,7 +163,7 @@ std::string evaluateRules(Database *database, DatalogProgram *program) {
             for (unsigned int i = 0; i < headRelation->getScheme().size(); i += 1) {
                 std::string oldCol = ruleRelation.getScheme().at(i);
                 std::string newCol = headRelation->getScheme().at(i);
-                ruleRelation = ruleRelation.rename(oldCol, newCol);
+                ruleRelation.rename(oldCol, newCol);
             }
             
             //  Union with the relation in the database

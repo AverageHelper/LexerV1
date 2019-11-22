@@ -19,12 +19,12 @@ public:
     Tuple(const Tuple &other);
     
     /// Concatinates the values of @c other uniquely with the receiver's contents.
-    Tuple combinedWith(Tuple other) const;
+    Tuple combinedWith(const Tuple& other) const;
     
     /// Returns the first index where @c val can be found in the tuple.
     ///
     /// @returns An index, or -1 if @c val cannot be found.
-    int firstIndexOf(std::string val);
+    int firstIndexOf(const std::string& val) const;
     
     /// Contactinates the receiver's contents.
     std::string toString() const;
