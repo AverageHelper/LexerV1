@@ -24,8 +24,25 @@ const std::vector<Relation*> Database::getRelations() {
     return this->relations;
 }
 
-void Database::addRelation(Relation* relation) {
+bool Database::addRelation(Relation* relation) {
+    for (size_t i = 0; i < this->relations.size(); i += 1) {
+        Relation* extantRelation = this->relations.at(i);
+        
+        if (extantRelation->getName() == relation->getName()) {
+            // Relation with same name? If it's new, replace what we have.
+            if (*extantRelation != *relation) {
+                delete extantRelation;
+                this->relations.erase(this->relations.begin() + i);
+                break;
+            } else {
+                // Identical? Do nothing.
+                return false;
+            }
+        }
+    }
+    
     this->relations.push_back(relation);
+    return true;
 }
 
 Relation* Database::relationWithName(std::string name) {

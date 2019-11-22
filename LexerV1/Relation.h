@@ -30,7 +30,7 @@ private:
     bool vectorContainsValue(const std::vector<std::string> &domain, const std::string &query) const;
     
     /// Returns the index of @c col in @c domain, or -1 if it is not found.
-    int indexForColumnInTuple(std::string col, const Tuple &domain);
+    int indexForColumnInTuple(std::string col, const Tuple &domain) const;
     
     /// Strips all columns following @c col from the relation, including @c col.
     void keepOnlyColumnsUntil(size_t col);
@@ -41,6 +41,7 @@ public:
     ~Relation();
     
     std::string getName() const;
+    void setName(const std::string newName);
     Tuple getScheme() const;
     size_t getColumnCount() const;
     
@@ -49,11 +50,20 @@ public:
     std::set<Tuple> getContents() const;
     std::vector<Tuple> listContents() const;
     
-    int indexForColumnInScheme(std::string col);
+    int indexForColumnInScheme(std::string col) const;
     
     
     /// Given a name @e in the schema, and a new name @e not in the schema, pretend the name is actually the new name.
+    ///
+    /// @c newCol must not already exist in the schema, else no change will occur.
     Relation rename(std::string oldCol, std::string newCol) const;
+    
+    /// Replaces the receiver's scheme with values in @c newScheme.  If one of the values in @c newScheme is an empty string,
+    /// the present scheme's value is preserved.  If there are duplicate values in @c newScheme, then only the first will be made part
+    /// of the resulting relation's scheme.
+    ///
+    /// The new scheme must be the same length as the receiver's old scheme, else no change will occur.
+    Relation rename(Tuple newScheme) const;
     
     
     /// Get rows whose values match each equivalence pair given in @c queries.

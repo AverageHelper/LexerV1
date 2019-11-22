@@ -14,7 +14,7 @@
 #import <string>
 #import "Lexer.h"
 #import "DatalogCheck.h"
-#import "Database.h"
+#import "EvaluatingDatabases.h"
 #import "TestUtils.h"
 
 #endif /* LexerV1_h */

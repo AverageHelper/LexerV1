@@ -23,7 +23,9 @@ public:
     ~Database();
     
     const std::vector<Relation*> getRelations();
-    void addRelation(Relation* relation);
+    /// Adds the given @c relation to the database.
+    /// @returns @c true if the relation was added.
+    bool addRelation(Relation* relation);
     Relation* relationWithName(std::string name);
 };
 

@@ -21,9 +21,10 @@ public:
     ~Rule();
     
     void setHeadPredicate(Predicate* predicate);
+    Predicate* getHeadPredicate() const;
     
     int addPredicate(Predicate* predicate);
-    std::vector<Predicate*> getPredicates();
+    std::vector<Predicate*> getPredicates() const;
     void setPredicates(std::vector<Predicate*> predicates);
     
     std::string toString() override;

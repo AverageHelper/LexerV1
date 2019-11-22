@@ -25,6 +25,9 @@ public:
     ///
     /// @returns An index, or -1 if @c val cannot be found.
     int firstIndexOf(std::string val);
+    
+    /// Contactinates the receiver's contents.
+    std::string toString() const;
 };
 
 #endif /* Tuple_h */

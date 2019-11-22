@@ -26,12 +26,16 @@ void Rule::setHeadPredicate(Predicate* predicate) {
     this->headPredicate = predicate;
 }
 
+Predicate* Rule::getHeadPredicate() const {
+    return headPredicate;
+}
+
 int Rule::addPredicate(Predicate* predicate) {
     predicates.push_back(predicate);
     return static_cast<int>(predicates.size());
 }
 
-std::vector<Predicate*> Rule::getPredicates() {
+std::vector<Predicate*> Rule::getPredicates() const {
     return predicates;
 }
 

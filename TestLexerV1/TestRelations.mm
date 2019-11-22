@@ -116,22 +116,22 @@
                                          inDomain:(nonnull NSString *)fileDomain
                                     expectSuccess:(bool)expectSuccess {
     NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
-    return [self datalogForInputFileNamed:testID
+    return [self datalogFromInputFileNamed:testID
                                withPrefix:prefix
                                  inDomain:fileDomain
                             expectSuccess:expectSuccess];
 }
 
-- (nullable DatalogProgram *)datalogForInputFileNamed:(nonnull NSString *)testID
+- (nullable DatalogProgram *)datalogFromInputFileNamed:(nonnull NSString *)testID
                                            withPrefix:(nonnull NSString *)prefix
                                              inDomain:(nonnull NSString *)fileDomain {
-    return [self datalogForInputFileNamed:testID
+    return [self datalogFromInputFileNamed:testID
                                withPrefix:prefix
                                  inDomain:fileDomain
                             expectSuccess:true];
 }
 
-- (nullable DatalogProgram *)datalogForInputFileNamed:(nonnull NSString *)testID
+- (nullable DatalogProgram *)datalogFromInputFileNamed:(nonnull NSString *)testID
                                            withPrefix:(nonnull NSString *)prefix
                                              inDomain:(nonnull NSString *)fileDomain
                                         expectSuccess:(bool)expectSuccess {
@@ -158,35 +158,7 @@
         return nil;
     }
     
-    // Write output
-    NSString *resultString = [NSString stringWithCString:checker.getResultMsg().c_str() encoding:NSUTF8StringEncoding];
-    resultString = [resultString stringByAppendingString:@"\n"];
-    NSURL *testResult = [self writeStringToWorkingDirectory:resultString];
-    if (testResult == nil) {
-        XCTAssert(false, "Failed to write output to test file.");
-        return nil;
-    }
-    
     return result;
-    
-//    NSString *answerPrefix;
-//    if ([prefix isEqualToString:@"in"]) {
-//        answerPrefix = @"out";
-//    } else {
-//        answerPrefix = @"answer";
-//    }
-//
-//    NSString *answerFileName = [answerPrefix stringByAppendingString:testID];
-//    NSString *answerKey = [self filePathForTestFileNamed:answerFileName inDomain:fileDomain];
-//    NSString *diff = [TestUtils getDiffBetweenFileAtPath:testResult.path andPath:answerKey];
-//
-//    // Make sure diff comes out empty
-//    bool success = [diff isEqualToString:@"\n"] || [diff isEqualToString:@""];
-//    if (!success) {
-//        NSLog(@"%@", diff);
-//    }
-//
-//    XCTAssert(success, @"diff '%@/%@.txt' returned '%@'", fileDomain, answerFileName, diff);
 }
 
 - (nullable NSURL *)writeStringToWorkingDirectory:(nonnull NSString *)string {
@@ -208,11 +180,147 @@
 }
 
 
-// MARK: - Major Tests
+// MARK: - Evaluating Facts
 
-//- (void)testDatabaseParse {
-//    
-//}
+- (void)runFactsFromInputFile:(int)fileNum
+                   withPrefix:(nonnull NSString *)prefix
+                     inDomain:(nonnull NSString *)fileDomain {
+    // Default evaluatingRules to false
+    return [self runFactsFromInputFile:fileNum withPrefix:prefix inDomain:fileDomain evaluatingRules:false];
+}
+
+- (void)runFactsFromInputFile:(int)fileNum
+                   withPrefix:(nonnull NSString *)prefix
+                     inDomain:(nonnull NSString *)fileDomain
+              evaluatingRules:(bool)evaluatingRules {
+    // Translate integer to string
+    NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
+    return [self runFactsFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain evaluatingRules:evaluatingRules];
+}
+
+- (void)runFactsFromInputFileNamed:(nonnull NSString *)testID
+                        withPrefix:(nonnull NSString *)prefix
+                          inDomain:(nonnull NSString *)fileDomain
+                   evaluatingRules:(bool)evaluatingRules {
+    DatalogProgram* program = [self datalogFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
+    XCTAssertNotEqual(program, nullptr, "No valid program from in30.txt");
+    if (program == nullptr) {
+        return;
+    }
+    
+    Database* database = new Database();
+    
+    evaluateSchemes(database, program);
+    evaluateFacts(database, program);
+    std::string output = "";
+    if (evaluatingRules) {
+        output += evaluateRules(database, program);
+    }
+    output += evaluateQueries(database, program, evaluatingRules);
+    
+    // Write output
+    NSString *resultString = [NSString stringWithCString:output.c_str() encoding:NSUTF8StringEncoding];
+    resultString = [resultString stringByAppendingString:@"\n"];
+    NSURL *testResult = [self writeStringToWorkingDirectory:resultString];
+    if (testResult == nil) {
+        XCTAssert(false, "Failed to write output to test file.");
+        return;
+    }
+    
+    NSString *answerPrefix;
+    if ([prefix isEqualToString:@"in"]) {
+        answerPrefix = @"out";
+    } else {
+        answerPrefix = @"answer";
+    }
+    
+    NSString *answerFileName = [answerPrefix stringByAppendingString:testID];
+    NSString *answerKey = [self filePathForTestFileNamed:answerFileName inDomain:fileDomain];
+    NSString *diff = [TestUtils getDiffBetweenFileAtPath:testResult.path andPath:answerKey];
+    
+    // Make sure diff comes out empty
+    bool success = [diff isEqualToString:@"\n"] || [diff isEqualToString:@""];
+    if (!success) {
+        NSLog(@"%@", diff);
+    }
+    
+    XCTAssert(success, @"diff '%@/%@.txt' returned '%@'", fileDomain, answerFileName, diff);
+}
+
+- (void)testEvaluatingRelations {
+    NSString *domain = @"Basic Tests";
+    NSString *prefix = @"in";
+    
+    [self runFactsFromInputFile:30 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:33 withPrefix:prefix inDomain:domain];
+    for (int fileNum = 35; fileNum <= 37; fileNum += 1) {
+        [self runFactsFromInputFile:fileNum withPrefix:prefix inDomain:domain];
+    }
+    for (int fileNum = 41; fileNum <= 44; fileNum += 1) {
+        [self runFactsFromInputFile:fileNum withPrefix:prefix inDomain:domain];
+    }
+    [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:62 withPrefix:prefix inDomain:domain];
+}
+
+- (void)test80Bucket {
+    NSString *domain = @"80 Bucket";
+    NSString *prefix = @"test_case";
+    
+    for (int fileNum = 0; fileNum <= 4; fileNum += 1) {
+        [self runFactsFromInputFile:fileNum withPrefix:prefix inDomain:domain];
+    }
+    [self runFactsFromInputFile:7 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:8 withPrefix:prefix inDomain:domain];
+}
+
+- (void)test100Bucket {
+    NSString *domain = @"100 Bucket";
+    NSString *prefix = @"test_case";
+    
+    [self runFactsFromInputFile:5 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:6 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:9 withPrefix:prefix inDomain:domain];
+}
+
+// MARK: - Evaluating Rules
+
+- (void)testEvaluatingRules {
+    NSString *domain = @"Rule Evaluations";
+    NSString *prefix = @"in";
+    
+    [self runFactsFromInputFile:40 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    for (int fileNum = 44; fileNum <= 49; fileNum += 1) {
+        [self runFactsFromInputFile:fileNum withPrefix:prefix inDomain:domain evaluatingRules:true];
+    }
+    [self runFactsFromInputFile:54 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    [self runFactsFromInputFile:55 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    [self runFactsFromInputFile:62 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    
+    // This runs long. Measure its runtime.
+    // [self runFactsFromInputFile:88 withPrefix:prefix inDomain:domain evaluatingRules:true];
+}
+
+// MARK: - Efficiency
+
+- (void)testBasicRuleEvaluation {
+    [self measureBlock:^{
+        [self runFactsFromInputFile:54 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    }];
+    [self measureBlock:^{
+        [self runFactsFromInputFile:55 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    }];
+    [self measureBlock:^{
+        [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain evaluatingRules:true];
+    }];
+}
+
+- (void)testLongRunningDatalog {
+    [self measureBlock:^{
+        [self runFactsFromInputFile:88 withPrefix:@"in" inDomain:@"Rule Evaluations" evaluatingRules:true];
+    }];
+}
 
 // MARK: - Structures
 
@@ -303,13 +411,14 @@
         std::vector<std::string> items = fact->getItems();
         
         Relation* relation = database->relationWithName(fact->getIdentifier());
-        XCTAssertNotEqual(relation, nullptr, "Relation was nil.");
+        XCTAssertFalse(relation == nullptr, "Relation '%s' does not exist in the database.",
+                       fact->getIdentifier().c_str());
         
         if (relation != nullptr) {
             Tuple tuple = Tuple(items);
             XCTAssert(relation->addTuple(tuple), "Failed to add tuple: wrong number of elements.");
+            XCTAssertFalse(relation->getContents().empty(), "Failed to add tuple.");
         }
-        XCTAssertFalse(relation->getContents().empty(), "Failed to add tuple.");
         
         factsProcessed += 1;
     }
@@ -861,6 +970,36 @@
     joined.addTuple(Tuple({ "9", "10", "11", "12", "21", "22", "32" }));
     
     XCTAssertEqual(joined.getContents().size(), 9, "Incorrect tuples after join.");
+}
+
+// MARK: - Union
+
+- (void)testUnionRelations {
+    Relation relation = Relation("R", Tuple({ "A", "B", "C", "D" }));
+    relation.addTuple(Tuple({ "1", "2", "3", "4" }));
+    
+    Relation different = Relation("S", Tuple({ "E", "F", "G" }));
+    different.addTuple(Tuple({ "15", "16", "24" }));
+    
+    Relation unioned = relation.unionWith(different);
+    XCTAssertEqual(unioned.getScheme(), relation.getScheme(), "Scheme changed after union.");
+    XCTAssertEqual(unioned.getContents().size(), 0, "Bad union returned a relation with data.");
+    
+    Relation compatible = Relation("S", Tuple({ "A", "B", "C", "D" }));
+    compatible.addTuple(Tuple({ "5", "6", "7", "8" }));
+    compatible.addTuple(Tuple({ "1", "2", "5", "6" }));
+    compatible.addTuple(Tuple({ "7", "8", "3", "4" }));
+    
+    unioned = relation.unionWith(compatible);
+    XCTAssertEqual(unioned.getScheme(), relation.getScheme(), "Scheme changed after union.");
+    XCTAssertEqual(unioned.getContents().size(), 4, "Wrong contents after union.");
+    
+    unioned.addTuple(Tuple({ "1", "2", "3", "4" }));
+    unioned.addTuple(Tuple({ "5", "6", "7", "8" }));
+    unioned.addTuple(Tuple({ "1", "2", "5", "6" }));
+    unioned.addTuple(Tuple({ "7", "8", "3", "4" }));
+    
+    XCTAssertEqual(unioned.getContents().size(), 4, "Wrong contents after union.");
 }
 
 @end

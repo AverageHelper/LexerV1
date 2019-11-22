@@ -28,6 +28,10 @@ std::string Relation::getName() const {
     return this->name;
 }
 
+void Relation::setName(const std::string newName) {
+    this->name = newName;
+}
+
 size_t Relation::getColumnCount() const {
     return getScheme().size();
 }
@@ -62,17 +66,46 @@ std::vector<Tuple> Relation::listContents() const {
 Relation Relation::rename(std::string oldCol, std::string newCol) const {
     Tuple newScheme = getScheme();
     
-    // Evaluate for each column in scheme.
-    for (unsigned int i = 0; i < newScheme.size(); i += 1) {
-        if (newScheme.at(i) == oldCol && !vectorContainsValue(newScheme, newCol)) {
-            // Did we land at oldCol? Have we not replaced it yet?
-            newScheme.at(i) = newCol; // Replace oldName with newName
+    for (size_t i = 0; i < newScheme.size(); i += 1) {
+        if (newScheme.at(i) == oldCol) {
+            newScheme.at(i) = newCol;
         }
     }
     
-    Relation newRelation = Relation(name, newScheme);
-    newRelation.contents = getContents();
-    return newRelation;
+    return rename(newScheme);
+}
+
+Relation Relation::rename(Tuple newScheme) const {
+    if (newScheme.size() != getScheme().size() || // Wrong size, or
+        newScheme == getScheme()) { // Identical scheme
+        return *this;
+    }
+    
+    Tuple resultScheme = getScheme();
+    std::set<std::string> resultValues = std::set<std::string>();
+    
+    for (size_t col = 0; col < newScheme.size(); col += 1) {
+        std::string oldVal = getScheme().at(col);
+        std::string newVal = newScheme.at(col);
+        
+        if (!newVal.empty()) {
+            resultScheme.at(col) = newVal;
+            resultValues.insert(newVal);
+        } else {
+            resultValues.insert(oldVal);
+        }
+    }
+    
+    if (resultValues.size() == resultScheme.size()) {
+        // We have no duplicates! Send it off.
+        Relation result = Relation(name, resultScheme);
+        result.contents = getContents();
+        return result;
+        
+    } else {
+        // Duplicate values! Do nothing.
+        return *this;
+    }
 }
 
 Relation Relation::select(std::vector< std::pair<size_t, std::string> > queries) const {
@@ -183,11 +216,11 @@ void Relation::stripExtraColsFromScheme(Tuple &otherScheme) const {
     otherScheme = result;
 }
 
-int Relation::indexForColumnInScheme(std::string col) {
+int Relation::indexForColumnInScheme(std::string col) const {
     return indexForColumnInTuple(col, getScheme());
 }
 
-int Relation::indexForColumnInTuple(std::string col, const Tuple &domain) {
+int Relation::indexForColumnInTuple(std::string col, const Tuple &domain) const {
     for (unsigned int i = 0; i < domain.size(); i += 1) {
         if (domain.at(i) == col) {
             return i;
@@ -291,16 +324,56 @@ std::string Relation::stringForTuple(Tuple tuple) const {
 }
 
 Relation Relation::joinedWith(Relation other) const {
+    if (this->getName() == other.getName() &&
+        this->getScheme() == other.getScheme() &&
+        this->getContents() == other.getContents()) {
+        return *this;
+    }
+    
     Tuple newScheme = getScheme().combinedWith(other.getScheme());
     Relation result = Relation(getName(), newScheme);
     
     for (Tuple t1 : this->getContents()) {
         for (Tuple t2 : other.getContents()) {
             
-            Tuple combined = t1.combinedWith(t2);
-            // Combined will have too many elements if it could not find matching column values.
-            //   Our join will return empty if that is the case.
-            result.addTuple(combined);
+            Tuple combined = newScheme;
+            bool isValid = true;
+            for (size_t colIdx = 0; colIdx < combined.size(); colIdx += 1) {
+                // For each column,
+                std::string col = combined.at(colIdx);
+                
+                //   Find that item in each relation
+                int index1 = this->indexForColumnInScheme(col);
+                std::string val1 = "";
+                int index2 = other.indexForColumnInScheme(col);
+                std::string val2 = "";
+                
+                if (index1 >= 0) {
+                    val1 = t1.at(index1);
+                }
+                if (index2 >= 0) {
+                    val2 = t2.at(index2);
+                }
+                
+                if ((val1 == val2 && !val1.empty()) || // If val is identical, or
+                    (!val1.empty() && val2.empty())) { // If val is found only in t1,
+                    // Add t1's value to our combined tuple.
+                    combined.at(colIdx) = val1;
+                }
+                if ((val1 == val2 && !val2.empty()) || // If val is identical, or
+                    (!val2.empty() && val1.empty())) { // If val is found only in t2,
+                    // Add t2's value to our combined tuple.
+                    combined.at(colIdx) = val2;
+                }
+                if (val1 != val2 && !val1.empty() && !val2.empty()) { // If they're different,
+                    // Drop the tuple
+                    isValid = false;
+                }
+            }
+            
+            if (isValid) {
+                result.addTuple(combined);
+            }
             
         }
     }
@@ -309,22 +382,19 @@ Relation Relation::joinedWith(Relation other) const {
 }
 
 Relation Relation::unionWith(Relation other) const {
-    std::set<std::string> newSchemeContents = std::set<std::string>();
-    for (auto str : getScheme()) {
-        newSchemeContents.insert(str);
-    }
-    for (auto str : other.getScheme()) {
-        newSchemeContents.insert(str);
-    }
-    Tuple newScheme = Tuple();
-    
-    for (auto item : newSchemeContents) {
-        newScheme.push_back(item);
+    if (other.getScheme() != getScheme()) {
+        // If we aren't union-compatible, return an empty table.
+        return Relation(getName(), getScheme());
     }
     
-    Relation result = Relation(getName(), newScheme);
+    Relation result = Relation(getName(), getScheme());
     
-    
+    for (auto t : getContents()) {
+        result.addTuple(t);
+    }
+    for (auto t : other.getContents()) {
+        result.addTuple(t);
+    }
     
     return result;
 }

@@ -47,3 +47,11 @@ int Tuple::firstIndexOf(std::string val) {
     
     return -1;
 }
+
+std::string Tuple::toString() const {
+    std::string result = "";
+    for (auto val : *this) {
+        result += val;
+    }
+    return result;
+}
