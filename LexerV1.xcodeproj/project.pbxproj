@@ -32,6 +32,9 @@
 		85BBE3E82342C123002BBB2B /* DatalogProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */; };
 		85BBE3EB2342C157002BBB2B /* Rule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E92342C157002BBB2B /* Rule.cpp */; };
 		85BBE3EE2342C175002BBB2B /* Predicate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3EC2342C175002BBB2B /* Predicate.cpp */; };
+		85CED7712399FC2E00018E02 /* TestDependencyGraph.mm in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7702399FC2E00018E02 /* TestDependencyGraph.mm */; };
+		85CED7762399FDB100018E02 /* DependencyGraph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7742399FDB100018E02 /* DependencyGraph.cpp */; };
+		85CED7772399FDB100018E02 /* DependencyGraph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7742399FDB100018E02 /* DependencyGraph.cpp */; };
 		85D0BCF72327099E00FEE62C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85D0BCF62327099E00FEE62C /* main.cpp */; };
 		85F946D92363B6D3006C460E /* TestGrammar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 85F946D82363B6D3006C460E /* TestGrammar.mm */; };
 		85F946E12363BACD006C460E /* TestLexer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 85F946E02363BACD006C460E /* TestLexer.mm */; };
@@ -165,6 +168,27 @@
 		85BBE3EC2342C175002BBB2B /* Predicate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Predicate.cpp; sourceTree = "<group>"; };
 		85BBE3ED2342C175002BBB2B /* Predicate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Predicate.h; sourceTree = "<group>"; };
 		85BBE3F22342C328002BBB2B /* Production.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Production.h; sourceTree = "<group>"; };
+		85CED75D2399E76300018E02 /* in55.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in55.txt; sourceTree = "<group>"; };
+		85CED75E2399E76400018E02 /* out55.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out55.txt; sourceTree = "<group>"; };
+		85CED75F2399E76400018E02 /* in62.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in62.txt; sourceTree = "<group>"; };
+		85CED7602399E76400018E02 /* in58.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in58.txt; sourceTree = "<group>"; };
+		85CED7612399E76400018E02 /* out62.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out62.txt; sourceTree = "<group>"; };
+		85CED7622399E76400018E02 /* in59.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in59.txt; sourceTree = "<group>"; };
+		85CED7632399E76400018E02 /* in54.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in54.txt; sourceTree = "<group>"; };
+		85CED7642399E76400018E02 /* out50.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out50.txt; sourceTree = "<group>"; };
+		85CED7652399E76400018E02 /* in56.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in56.txt; sourceTree = "<group>"; };
+		85CED7662399E76400018E02 /* out59.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out59.txt; sourceTree = "<group>"; };
+		85CED7672399E76400018E02 /* in50.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in50.txt; sourceTree = "<group>"; };
+		85CED7682399E76400018E02 /* out54.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out54.txt; sourceTree = "<group>"; };
+		85CED7692399E76500018E02 /* out61.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out61.txt; sourceTree = "<group>"; };
+		85CED76A2399E76500018E02 /* out56.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out56.txt; sourceTree = "<group>"; };
+		85CED76B2399E76500018E02 /* out64.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out64.txt; sourceTree = "<group>"; };
+		85CED76C2399E76500018E02 /* in61.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in61.txt; sourceTree = "<group>"; };
+		85CED76D2399E76500018E02 /* out58.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out58.txt; sourceTree = "<group>"; };
+		85CED76E2399E76500018E02 /* in64.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in64.txt; sourceTree = "<group>"; };
+		85CED7702399FC2E00018E02 /* TestDependencyGraph.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestDependencyGraph.mm; sourceTree = "<group>"; };
+		85CED7742399FDB100018E02 /* DependencyGraph.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DependencyGraph.cpp; sourceTree = "<group>"; };
+		85CED7752399FDB100018E02 /* DependencyGraph.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DependencyGraph.h; sourceTree = "<group>"; };
 		85D0BCF32327099E00FEE62C /* LexerV1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LexerV1; sourceTree = BUILT_PRODUCTS_DIR; };
 		85D0BCF62327099E00FEE62C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		85ED372823889F1C004CFE8A /* in88.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = in88.txt; sourceTree = "<group>"; };
@@ -401,6 +425,48 @@
 			path = "Rule Evaluations";
 			sourceTree = "<group>";
 		};
+		85CED75C2399E6DF00018E02 /* Basic Tests */ = {
+			isa = PBXGroup;
+			children = (
+				85CED7672399E76400018E02 /* in50.txt */,
+				85CED7632399E76400018E02 /* in54.txt */,
+				85CED75D2399E76300018E02 /* in55.txt */,
+				85CED7652399E76400018E02 /* in56.txt */,
+				85CED7602399E76400018E02 /* in58.txt */,
+				85CED7622399E76400018E02 /* in59.txt */,
+				85CED76C2399E76500018E02 /* in61.txt */,
+				85CED75F2399E76400018E02 /* in62.txt */,
+				85CED76E2399E76500018E02 /* in64.txt */,
+				85CED7642399E76400018E02 /* out50.txt */,
+				85CED7682399E76400018E02 /* out54.txt */,
+				85CED75E2399E76400018E02 /* out55.txt */,
+				85CED76A2399E76500018E02 /* out56.txt */,
+				85CED76D2399E76500018E02 /* out58.txt */,
+				85CED7662399E76400018E02 /* out59.txt */,
+				85CED7692399E76500018E02 /* out61.txt */,
+				85CED7612399E76400018E02 /* out62.txt */,
+				85CED76B2399E76500018E02 /* out64.txt */,
+			);
+			path = "Basic Tests";
+			sourceTree = "<group>";
+		};
+		85CED76F2399FBFB00018E02 /* Dependency Graph Test Files */ = {
+			isa = PBXGroup;
+			children = (
+				85CED75C2399E6DF00018E02 /* Basic Tests */,
+			);
+			path = "Dependency Graph Test Files";
+			sourceTree = "<group>";
+		};
+		85CED7732399FCD700018E02 /* Dependency Graph */ = {
+			isa = PBXGroup;
+			children = (
+				85CED7752399FDB100018E02 /* DependencyGraph.h */,
+				85CED7742399FDB100018E02 /* DependencyGraph.cpp */,
+			);
+			name = "Dependency Graph";
+			sourceTree = "<group>";
+		};
 		85D0BCEA2327099E00FEE62C = {
 			isa = PBXGroup;
 			children = (
@@ -425,6 +491,7 @@
 				85FDB0A3233EADD500A90CC8 /* Lexer */,
 				85FDB0A4233EAEB500A90CC8 /* Grammar */,
 				85F953A52371141F008D5D69 /* Relational Database */,
+				85CED7732399FCD700018E02 /* Dependency Graph */,
 				85D0BCF62327099E00FEE62C /* main.cpp */,
 			);
 			path = LexerV1;
@@ -439,9 +506,11 @@
 				85F946DF2363BAAC006C460E /* Lexer Test Files */,
 				8548AA112367680F00D49AA3 /* Grammar Test Files */,
 				85F953722370D81B008D5D69 /* Relation Test Files */,
+				85CED76F2399FBFB00018E02 /* Dependency Graph Test Files */,
 				85F946E02363BACD006C460E /* TestLexer.mm */,
 				85F946D82363B6D3006C460E /* TestGrammar.mm */,
 				85F953732370D833008D5D69 /* TestRelations.mm */,
+				85CED7702399FC2E00018E02 /* TestDependencyGraph.mm */,
 				85F946DA2363B6D3006C460E /* Info.plist */,
 			);
 			path = TestLexerV1;
@@ -761,6 +830,7 @@
 				85BBE3E82342C123002BBB2B /* DatalogProgram.cpp in Sources */,
 				858FB2A42386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */,
 				858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */,
+				85CED7762399FDB100018E02 /* DependencyGraph.cpp in Sources */,
 				85F953A4237113FF008D5D69 /* Database.cpp in Sources */,
 				85D0BCF72327099E00FEE62C /* main.cpp in Sources */,
 			);
@@ -775,6 +845,8 @@
 				85F953AD23723376008D5D69 /* Relation.cpp in Sources */,
 				856F2ACF2368847B00BE23F7 /* DatalogProgram.cpp in Sources */,
 				856F2AD02368847B00BE23F7 /* Rule.cpp in Sources */,
+				85CED7772399FDB100018E02 /* DependencyGraph.cpp in Sources */,
+				85CED7712399FC2E00018E02 /* TestDependencyGraph.mm in Sources */,
 				856F2AD12368847B00BE23F7 /* Predicate.cpp in Sources */,
 				85F953AC23723374008D5D69 /* Database.cpp in Sources */,
 				85F947522363D009006C460E /* OperatorRecognizer.cpp in Sources */,

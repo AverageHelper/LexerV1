@@ -16,5 +16,6 @@
 #import "DatalogCheck.h"
 #import "EvaluatingDatabases.h"
 #import "TestUtils.h"
+#import "DependencyGraph.h"
 
 #endif /* LexerV1_h */
