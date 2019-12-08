@@ -13,17 +13,27 @@ Rule::Rule() {
 }
 
 Rule::~Rule() {
-    delete headPredicate;
-    headPredicate = nullptr;
+    if (headPredicate != nullptr) {
+        headPredicate->release();
+        if (!headPredicate->isOwned()) {
+            delete headPredicate;
+        }
+        headPredicate = nullptr;
+    }
     
-    for (unsigned int i = 0; i < predicates.size(); i += 1) {
-        delete predicates.at(i);
+    for (Predicate* pred : predicates) {
+        if (pred == nullptr) { continue; }
+        pred->release();
+        if (!pred->isOwned()) {
+            delete pred;
+        }
     }
     predicates.clear();
 }
 
 void Rule::setHeadPredicate(Predicate* predicate) {
     this->headPredicate = predicate;
+    predicate->retain();
 }
 
 Predicate* Rule::getHeadPredicate() const {
@@ -32,6 +42,7 @@ Predicate* Rule::getHeadPredicate() const {
 
 int Rule::addPredicate(Predicate* predicate) {
     predicates.push_back(predicate);
+    predicate->retain();
     return static_cast<int>(predicates.size());
 }
 
@@ -40,7 +51,13 @@ std::vector<Predicate*> Rule::getPredicates() const {
 }
 
 void Rule::setPredicates(std::vector<Predicate*> predicates) {
+    for (auto pred : this->predicates) {
+        pred->release();
+    }
     this->predicates = predicates;
+    for (auto pred : predicates) {
+        pred->retain();
+    }
 }
 
 std::string Rule::toString() {

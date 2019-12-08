@@ -204,7 +204,7 @@
     delete r1;
 }
 
-- (void)testDependencyGraph {
+- (void)testDependencyGraphOperations {
     DependencyGraph graph = DependencyGraph();
     
     Tuple identityTuple = Tuple({ "1", "2", "3" });
@@ -236,6 +236,51 @@
     XCTAssert(graph.toString() == "R0:R1\nR1:R0,R1\n", "Graph reported incorrectly.");
     
     delete r1;
+}
+
+- (void)testBuildDependencyGraph {
+    /*
+     A(X,Y) :- B(X,Y), C(X,Y). # R0
+     B(X,Y) :- A(X,Y), D(X,Y). # R1
+     B(X,Y) :- B(Y,X).         # R2
+     E(X,Y) :- F(X,Y), G(X,Y). # R3
+     E(X,Y) :- E(X,Y), F(X,Y). # R4
+     */
+    Predicate* a = new Predicate(RULES, "A"); a->copyItemsIn({ "X", "Y" }); // A(X,Y)
+    XCTAssert(a->toString() == "A(X,Y)", "Wrong string for predicate.");
+    Predicate* b1 = new Predicate(RULES, "B"); b1->copyItemsIn({ "X", "Y" }); // B(X,Y)
+    XCTAssert(b1->toString() == "B(X,Y)", "Wrong string for predicate.");
+    Predicate* b2 = new Predicate(RULES, "B"); b2->copyItemsIn({ "Y", "X" }); // B(Y,X)
+    XCTAssert(b2->toString() == "B(Y,X)", "Wrong string for predicate.");
+    Predicate* c = new Predicate(RULES, "C"); c->copyItemsIn({ "X", "Y" }); // C(X,Y)
+    XCTAssert(c->toString() == "C(X,Y)", "Wrong string for predicate.");
+    Predicate* d = new Predicate(RULES, "D"); d->copyItemsIn({ "X", "Y" }); // D(X,Y)
+    XCTAssert(d->toString() == "D(X,Y)", "Wrong string for predicate.");
+    Predicate* e = new Predicate(RULES, "E"); e->copyItemsIn({ "X", "Y" }); // E(X,Y)
+    XCTAssert(e->toString() == "E(X,Y)", "Wrong string for predicate.");
+    Predicate* f = new Predicate(RULES, "F"); f->copyItemsIn({ "X", "Y" }); // F(X,Y)
+    XCTAssert(f->toString() == "F(X,Y)", "Wrong string for predicate.");
+    Predicate* g = new Predicate(RULES, "G"); g->copyItemsIn({ "X", "Y" }); // G(X,Y)
+    XCTAssert(g->toString() == "G(X,Y)", "Wrong string for predicate.");
+    
+    Rule r0 = Rule(); r0.setHeadPredicate(a); r0.setPredicates({ b1, c }); // A(X,Y) :- B(X,Y),C(X,Y).
+    XCTAssert(r0.toString() == "A(X,Y) :- B(X,Y),C(X,Y).", "Wrong string for rule.");
+    Rule r1 = Rule(); r1.setHeadPredicate(b1); r1.setPredicates({ a, d }); // B(X,Y) :- A(X,Y),D(X,Y).
+    XCTAssert(r1.toString() == "B(X,Y) :- A(X,Y),D(X,Y).", "Wrong string for rule.");
+    Rule r2 = Rule(); r2.setHeadPredicate(b1); r2.setPredicates({ b2 }); // B(X,Y) :- B(Y,X).
+    XCTAssert(r2.toString() == "B(X,Y) :- B(Y,X).", "Wrong string for rule.");
+    Rule r3 = Rule(); r3.setHeadPredicate(e); r3.setPredicates({ f, g }); // E(X,Y) :- F(X,Y),G(X,Y).
+    XCTAssert(r3.toString() == "E(X,Y) :- F(X,Y),G(X,Y).", "Wrong string for rule.");
+    Rule r4 = Rule(); r4.setHeadPredicate(e); r4.setPredicates({ e, f }); // E(X,Y) :- E(X,Y),F(X,Y).
+    XCTAssert(r4.toString() == "E(X,Y) :- E(X,Y),F(X,Y).", "Wrong string for rule.");
+    
+    /*
+     R0: R1 R2
+     R1: R0
+     R2: R1 R2
+     R3:
+     R4: R3 R4
+     */
 }
 
 @end

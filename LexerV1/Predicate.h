@@ -9,12 +9,14 @@
 #define Predicate_h
 
 #include "Production.h"
+#include <iostream>
 
 class Predicate: public Production {
 private:
     TokenType type;
     std::string identifier;
     std::vector<std::string> contents;
+    int referenceCount;
     
 public:
     Predicate(TokenType type, std::string identifier);
@@ -22,6 +24,7 @@ public:
     
     int addItem(std::string item);
     void setItems(std::vector<std::string>& items);
+    void copyItemsIn(std::vector<std::string> items);
     
     void setType(TokenType type);
     
@@ -29,6 +32,10 @@ public:
     std::string getIdentifier();
     std::vector<std::string> getItems();
     std::string toString() override;
+    
+    bool isOwned() const;
+    void retain();
+    void release();
 };
 
 #endif /* Predicate_h */

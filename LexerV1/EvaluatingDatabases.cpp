@@ -19,6 +19,8 @@ int indexOfValueInVector(std::string query, const std::vector<std::string> &doma
     return -1;
 }
 
+// MARK: - Schemes
+
 void evaluateSchemes(Database *database, DatalogProgram *program) {
     for (unsigned int schemeIdx = 0; schemeIdx < program->getSchemes().size(); schemeIdx += 1) {
         Predicate* scheme = program->getSchemes().at(schemeIdx);
@@ -28,6 +30,8 @@ void evaluateSchemes(Database *database, DatalogProgram *program) {
         database->addRelation(relation);
     }
 }
+
+// MARK: - Facts
 
 void evaluateFacts(Database *database, DatalogProgram *program) {
     for (unsigned int factIdx = 0; factIdx < program->getFacts().size(); factIdx += 1) {
@@ -42,6 +46,8 @@ void evaluateFacts(Database *database, DatalogProgram *program) {
         }
     }
 }
+
+// MARK: - Queries
 
 std::string evaluateQueryItem(Relation &result,
                               Database *database,
@@ -110,7 +116,91 @@ std::string evaluateQueryItem(Relation &result,
     return str.str();
 }
 
-std::string evaluateRules(Database *database, DatalogProgram *program) {
+std::string evaluateQueries(Database *database, DatalogProgram *program, bool printingHeader) {
+    std::ostringstream str = std::ostringstream();
+    if (printingHeader) {
+        str << "Query Evaluation" << std::endl;
+    }
+    for (unsigned int i = 0; i < program->getQueries().size(); i += 1) {
+        Predicate* query = program->getQueries().at(i);
+        
+        str << query->toString() << " ";
+        
+        Relation* relation = database->relationWithName(query->getIdentifier());
+        if (relation == nullptr) {
+            str << "No" << std::endl;
+            continue;
+        }
+        Relation found = *relation;
+        str << evaluateQueryItem(found, database, query);
+        
+        // If there are variables in the query, output the tuples from the resulting relation.
+        for (Tuple t : found.getContents()) {
+            str << "  " << found.stringForTuple(t) << std::endl;
+        }
+    }
+    
+    std::string output = str.str();
+    for (size_t i = output.size() - 1; i >= 0; i -= 1) {
+        if (iswspace(output.at(i))) {
+            output.pop_back();
+        } else { // Only the trailing spaces
+            break;
+        }
+    }
+    
+    return output;
+}
+
+// MARK: - Rules
+
+// MARK: Dependencies
+
+DependencyGraph* buildDependencyGraph(Database *database, DatalogProgram *program) {
+    // Build the dependency graph
+    DependencyGraph* graph = new DependencyGraph();
+    
+    for (auto rule : program->getRules()) {
+        Predicate* predicate = rule->getHeadPredicate();
+        Relation* head = nullptr;
+        if (predicate != nullptr) {
+            head = database->relationWithName(predicate->getIdentifier());
+            if (head == nullptr) { continue; }
+            graph->addDependency(head, nullptr);
+        }
+        
+        for (auto predicate : rule->getPredicates()) {
+            Relation* tail = database->relationWithName(predicate->getIdentifier());
+            if (tail == nullptr) { continue; }
+            graph->addDependency(head, tail);
+        }
+        
+    }
+    
+    return graph;
+}
+
+void invert() {
+    // Build the reverse dependency graph.
+}
+
+void dfsForest() {
+    // Run DFS-Forest on the reverse dependency graph.
+}
+
+void findSCCs() {
+    // Find the strongly connected components (SCCs).
+}
+
+// Evaluate the rules in each component.
+void evaluateRulesInComponent() {
+    
+}
+
+
+// MARK: Evaluate
+
+std::string evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies) {
     std::ostringstream str = std::ostringstream();
     str << "Rule Evaluation" << std::endl;
     
@@ -202,40 +292,4 @@ std::string evaluateRules(Database *database, DatalogProgram *program) {
         << " passes through the Rules." << std::endl << std::endl;
     
     return str.str();
-}
-
-std::string evaluateQueries(Database *database, DatalogProgram *program, bool printingHeader) {
-    std::ostringstream str = std::ostringstream();
-    if (printingHeader) {
-        str << "Query Evaluation" << std::endl;
-    }
-    for (unsigned int i = 0; i < program->getQueries().size(); i += 1) {
-        Predicate* query = program->getQueries().at(i);
-        
-        str << query->toString() << " ";
-        
-        Relation* relation = database->relationWithName(query->getIdentifier());
-        if (relation == nullptr) {
-            str << "No" << std::endl;
-            continue;
-        }
-        Relation found = *relation;
-        str << evaluateQueryItem(found, database, query);
-        
-        // If there are variables in the query, output the tuples from the resulting relation.
-        for (Tuple t : found.getContents()) {
-            str << "  " << found.stringForTuple(t) << std::endl;
-        }
-    }
-    
-    std::string output = str.str();
-    for (size_t i = output.size() - 1; i >= 0; i -= 1) {
-        if (iswspace(output.at(i))) {
-            output.pop_back();
-        } else { // Only the trailing spaces
-            break;
-        }
-    }
-    
-    return output;
 }

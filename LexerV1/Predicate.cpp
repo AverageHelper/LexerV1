@@ -12,9 +12,13 @@ Predicate::Predicate(TokenType type, std::string identifier) {
     this->type = type;
     this->identifier = identifier;
     this->contents = {};
+    this->referenceCount = 0;
 }
 
 Predicate::~Predicate() {
+    if (this->isOwned()) {
+        std::cout << "--- Deallocated an owned Predicate object ---" << std::endl;
+    }
     contents.clear();
 }
 
@@ -35,6 +39,10 @@ std::vector<std::string> Predicate::getItems() {
 }
 
 void Predicate::setItems(std::vector<std::string>& items) {
+    this->contents = items;
+}
+
+void Predicate::copyItemsIn(std::vector<std::string> items) {
     this->contents = items;
 }
 
@@ -65,4 +73,21 @@ std::string Predicate::toString() {
     }
     
     return result.str();
+}
+
+// MARK: Memory Management
+
+bool Predicate::isOwned() const {
+    return referenceCount != 0;
+}
+
+void Predicate::retain() {
+    referenceCount += 1;
+}
+
+void Predicate::release() {
+    referenceCount -= 1;
+    if (referenceCount < 0) {
+        std::cout << "--- WARNING: A Predicate's referenceCount descended below 0 ---" << std::endl;
+    }
 }
