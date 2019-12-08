@@ -26,6 +26,6 @@ std::string extern evaluateQueryItem(Relation &result,
 std::string extern evaluateQueries(Database *database, DatalogProgram *program, bool printingHeader = true);
 std::string extern evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies = false);
 
-DependencyGraph* buildDependencyGraph(Database *database, DatalogProgram *program);
+DependencyGraph* buildDependencyGraph(DatalogProgram *program);
 
 #endif /* EvaluatingDatabases_h */

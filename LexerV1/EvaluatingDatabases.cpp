@@ -156,25 +156,31 @@ std::string evaluateQueries(Database *database, DatalogProgram *program, bool pr
 
 // MARK: Dependencies
 
-DependencyGraph* buildDependencyGraph(Database *database, DatalogProgram *program) {
+DependencyGraph* buildDependencyGraph(DatalogProgram *program) {
     // Build the dependency graph
     DependencyGraph* graph = new DependencyGraph();
     
-    for (auto rule : program->getRules()) {
-        Predicate* predicate = rule->getHeadPredicate();
-        Relation* head = nullptr;
-        if (predicate != nullptr) {
-            head = database->relationWithName(predicate->getIdentifier());
-            if (head == nullptr) { continue; }
-            graph->addDependency(head, nullptr);
-        }
+    // Add nodes to the graph for each rule
+    for (auto ruleA : program->getRules()) {
+        if (ruleA == nullptr) { continue; }
+        Predicate* headA = ruleA->getHeadPredicate();
+        if (headA == nullptr) { continue; }
+        graph->addDependency(ruleA, nullptr);
         
-        for (auto predicate : rule->getPredicates()) {
-            Relation* tail = database->relationWithName(predicate->getIdentifier());
-            if (tail == nullptr) { continue; }
-            graph->addDependency(head, tail);
+        // Add edges for each dependency
+        for (auto ruleB : program->getRules()) {
+            if (ruleB == nullptr) { continue; }
+            
+            for (auto predicate : ruleA->getPredicates()) {
+                if (predicate == nullptr) { continue; }
+                // Rule A depends on rule B if any of the predicate names in the
+                // body of rule A is the same as the predicate name of the head of rule B
+                Predicate* headB = ruleB->getHeadPredicate();
+                if (predicate->getIdentifier() == headB->getIdentifier()) {
+                    graph->addDependency(ruleA, ruleB);
+                }
+            }
         }
-        
     }
     
     return graph;

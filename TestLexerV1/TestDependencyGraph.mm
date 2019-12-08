@@ -182,11 +182,12 @@
     DependencyGraph::Node node = DependencyGraph::Node();
     XCTAssert(node.getName() == "nullptr", "Wrong name on empty node.");
     
-    Tuple identityTuple = Tuple({ "1", "2", "3" });
-    Relation* r1 = new Relation("R1", identityTuple);
+    std::vector<std::string> identity = { "1", "2", "3" };
+    Rule* r1 = new Rule();
+    r1->setHeadPredicate(new Predicate(RULES, "R1")); r1->getHeadPredicate()->setItems(identity);
     
     node = DependencyGraph::Node(r1);
-    XCTAssert(node.getName() == r1->getName(), "Wrong name on node.");
+    XCTAssert(node.getName() == r1->getHeadPredicate()->getIdentifier(), "Wrong name on node.");
     
     XCTAssertEqual(node.getAdjacencies().size(), 0, "Node erroneously reported adjacencies.");
     node.addAdjacency(0);
@@ -207,13 +208,16 @@
 - (void)testDependencyGraphOperations {
     DependencyGraph graph = DependencyGraph();
     
-    Tuple identityTuple = Tuple({ "1", "2", "3" });
-    Relation* r1 = new Relation("R1", identityTuple);
+    Rule* r1 = new Rule();
+    r1->setHeadPredicate(new Predicate(RULES, "R1"));
+    std::vector<std::string> identity = { "1", "2", "3" };
+    r1->getHeadPredicate()->copyItemsIn(identity);
     
     XCTAssert(graph.addDependency(r1, nullptr), "Graph failed to add dependency, or reported incorrectly.");
     XCTAssert(graph.toString() == "R0:\n", "Graph does not contain dependency, or reported incorrectly.");
     
-    Relation* r2 = new Relation("R2", identityTuple);
+    Rule* r2 = new Rule();
+    r2->setHeadPredicate(new Predicate(RULES, "R2")); r2->getHeadPredicate()->setItems(identity);
     XCTAssert(graph.addDependency(r2, nullptr), "Failed to add dependency.");
     XCTAssert(graph.toString() == "R0:\nR1:\n", "Graph does not contain dependency.");
     
@@ -263,24 +267,36 @@
     Predicate* g = new Predicate(RULES, "G"); g->copyItemsIn({ "X", "Y" }); // G(X,Y)
     XCTAssert(g->toString() == "G(X,Y)", "Wrong string for predicate.");
     
-    Rule r0 = Rule(); r0.setHeadPredicate(a); r0.setPredicates({ b1, c }); // A(X,Y) :- B(X,Y),C(X,Y).
-    XCTAssert(r0.toString() == "A(X,Y) :- B(X,Y),C(X,Y).", "Wrong string for rule.");
-    Rule r1 = Rule(); r1.setHeadPredicate(b1); r1.setPredicates({ a, d }); // B(X,Y) :- A(X,Y),D(X,Y).
-    XCTAssert(r1.toString() == "B(X,Y) :- A(X,Y),D(X,Y).", "Wrong string for rule.");
-    Rule r2 = Rule(); r2.setHeadPredicate(b1); r2.setPredicates({ b2 }); // B(X,Y) :- B(Y,X).
-    XCTAssert(r2.toString() == "B(X,Y) :- B(Y,X).", "Wrong string for rule.");
-    Rule r3 = Rule(); r3.setHeadPredicate(e); r3.setPredicates({ f, g }); // E(X,Y) :- F(X,Y),G(X,Y).
-    XCTAssert(r3.toString() == "E(X,Y) :- F(X,Y),G(X,Y).", "Wrong string for rule.");
-    Rule r4 = Rule(); r4.setHeadPredicate(e); r4.setPredicates({ e, f }); // E(X,Y) :- E(X,Y),F(X,Y).
-    XCTAssert(r4.toString() == "E(X,Y) :- E(X,Y),F(X,Y).", "Wrong string for rule.");
+    Rule* r0 = new Rule(); r0->setHeadPredicate(a); r0->setPredicates({ b1, c }); // A(X,Y) :- B(X,Y),C(X,Y).
+    XCTAssert(r0->toString() == "A(X,Y) :- B(X,Y),C(X,Y).", "Wrong string for rule.");
+    Rule* r1 = new Rule(); r1->setHeadPredicate(b1); r1->setPredicates({ a, d }); // B(X,Y) :- A(X,Y),D(X,Y).
+    XCTAssert(r1->toString() == "B(X,Y) :- A(X,Y),D(X,Y).", "Wrong string for rule.");
+    Rule* r2 = new Rule(); r2->setHeadPredicate(b1); r2->setPredicates({ b2 }); // B(X,Y) :- B(Y,X).
+    XCTAssert(r2->toString() == "B(X,Y) :- B(Y,X).", "Wrong string for rule.");
+    Rule* r3 = new Rule(); r3->setHeadPredicate(e); r3->setPredicates({ f, g }); // E(X,Y) :- F(X,Y),G(X,Y).
+    XCTAssert(r3->toString() == "E(X,Y) :- F(X,Y),G(X,Y).", "Wrong string for rule.");
+    Rule* r4 = new Rule(); r4->setHeadPredicate(e); r4->setPredicates({ e, f }); // E(X,Y) :- E(X,Y),F(X,Y).
+    XCTAssert(r4->toString() == "E(X,Y) :- E(X,Y),F(X,Y).", "Wrong string for rule.");
     
-    /*
+    DatalogProgram* program = new DatalogProgram("Prog");
+    std::vector<Rule*> rules = { r0, r1, r2, r3, r4 };
+    program->setRules(rules);
+    
+    /* Graph:
      R0: R1 R2
      R1: R0
      R2: R1 R2
      R3:
      R4: R3 R4
      */
+    
+    DependencyGraph* graph = buildDependencyGraph(program);
+    std::string res = graph->toString();
+    
+    XCTAssert(res == "R0:R1,R2\nR1:R0\nR2:R1,R2\nR3:\nR4:R3,R4\n", "Built dependencies incorrectly.");
+    
+    delete program;
+    delete graph;
 }
 
 @end
