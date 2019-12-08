@@ -81,6 +81,54 @@ const std::map<int, DependencyGraph::Node>& DependencyGraph::getGraph() const {
     return this->nodes;
 }
 
+int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int startingPostorder) {
+    std::set<int> visited = std::set<int>();
+    std::stack<int> stack = std::stack<int>();
+    int previousPostOrder = startingPostorder;
+    
+    stack.push(start);
+    
+    while (!stack.empty()) {
+        int currentNode = stack.top();
+        
+        bool alreadyVisited = !visited.insert(currentNode).second;
+        if (alreadyVisited) {
+            Node node = nodes.at(currentNode);
+            node.setPostOrderNumber(previousPostOrder++);
+            nodes[currentNode] = node;
+            stack.pop();
+            continue;
+        }
+        
+        // The numerically-first index goes next.
+        for (auto idx : nodes.at(currentNode).getAdjacencies()) {
+            if (visited.find(idx) == visited.end()) { // If not already visited...
+                stack.push(idx);
+            }
+        }
+        
+    }
+    
+    return previousPostOrder;
+}
+
+std::string DependencyGraph::postOrderNumbers() {
+    // Run DFS-Forest on the dependency graph.
+    int nextPostorder = computePostOrderNumbersForVectorsStartingAt(0);
+    for (auto pair : nodes) {
+        if (pair.second.getPostOrderNumber() > -1) { continue; }
+        nextPostorder = computePostOrderNumbersForVectorsStartingAt(pair.first, nextPostorder);
+    }
+    
+    // Print the post-order numbers
+    std::ostringstream result = std::ostringstream();
+    for (auto pair : nodes) {
+        result << "R" << pair.first << ": " << pair.second.getPostOrderNumber() << std::endl;
+    }
+    
+    return result.str();
+}
+
 std::string DependencyGraph::toString() {
     std::ostringstream result = std::ostringstream();
     
@@ -114,11 +162,13 @@ std::string DependencyGraph::toString() {
 DependencyGraph::Node::Node(Rule* primaryRule) {
     this->primaryRule = primaryRule;
     this->adjacencies = std::set<int>();
+    this->postOrderNumber = -1;
 }
 
 DependencyGraph::Node::Node(const DependencyGraph::Node &other) {
     this->primaryRule = other.primaryRule;
     this->adjacencies = other.adjacencies;
+    this->postOrderNumber = other.postOrderNumber;
 }
 
 const std::set<int>& DependencyGraph::Node::getAdjacencies() const {
@@ -138,4 +188,12 @@ std::string DependencyGraph::Node::getName() const {
 
 Rule* DependencyGraph::Node::getPrimaryRule() const {
     return this->primaryRule;
+}
+
+int DependencyGraph::Node::getPostOrderNumber() const {
+    return this->postOrderNumber;
+}
+
+void DependencyGraph::Node::setPostOrderNumber(int num) {
+    this->postOrderNumber = num;
 }

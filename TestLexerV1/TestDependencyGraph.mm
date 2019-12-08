@@ -291,9 +291,37 @@
      */
     
     DependencyGraph* graph = buildDependencyGraph(program);
-    std::string res = graph->toString();
+    std::string result = graph->toString();
+    std::string graphStr = "R0:R1,R2\nR1:R0\nR2:R1,R2\nR3:\nR4:R3,R4\n";
+    XCTAssert(result == graphStr, "Built dependencies incorrectly.");
     
-    XCTAssert(res == "R0:R1,R2\nR1:R0\nR2:R1,R2\nR3:\nR4:R3,R4\n", "Built dependencies incorrectly.");
+    DependencyGraph* reversed = new DependencyGraph(*graph);
+    invert(*reversed);
+    result = reversed->toString();
+    XCTAssert(result != graphStr, "No change after graph invert.");
+    
+    /* Inverted:
+     R0: R1
+     R1: R0 R2
+     R2: R0 R2
+     R3: R4
+     R4: R4
+     */
+    
+    graphStr = "R0:R1\nR1:R0,R2\nR2:R0,R2\nR3:R4\nR4:R4\n";
+    XCTAssert(result == graphStr, "Inverted graph incorrectly.");
+    
+    /* Post-order numbers
+     R0: 3
+     R1: 2
+     R2: 1
+     R3: 5
+     R4: 4
+     */
+    
+    result = reversed->postOrderNumbers();
+    graphStr = "R0: 3\nR1: 2\nR2: 1\nR3: 5\nR4: 4\n";
+    XCTAssert(result == graphStr, "Incorrect post-order numbers of inverted graph.");
     
     delete program;
     delete graph;

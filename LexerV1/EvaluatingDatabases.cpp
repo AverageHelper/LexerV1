@@ -173,6 +173,7 @@ DependencyGraph* buildDependencyGraph(DatalogProgram *program) {
             
             for (auto predicate : ruleA->getPredicates()) {
                 if (predicate == nullptr) { continue; }
+                
                 // Rule A depends on rule B if any of the predicate names in the
                 // body of rule A is the same as the predicate name of the head of rule B
                 Predicate* headB = ruleB->getHeadPredicate();
@@ -186,12 +187,20 @@ DependencyGraph* buildDependencyGraph(DatalogProgram *program) {
     return graph;
 }
 
-void invert() {
+void invert(DependencyGraph& graph) {
     // Build the reverse dependency graph.
-}
-
-void dfsForest() {
-    // Run DFS-Forest on the reverse dependency graph.
+    DependencyGraph result = DependencyGraph();
+    
+    for (auto pair : graph.getGraph()) { // For each node...
+        result.addDependency(pair.second.getPrimaryRule(), nullptr); // Number the node
+        
+        for (auto adj : pair.second.getAdjacencies()) { // For each edge...
+            Rule* adjRule = graph.getGraph().at(adj).getPrimaryRule();
+            result.addDependency(adjRule, pair.second.getPrimaryRule()); // Reverse it!
+        }
+    }
+    
+    graph = result;
 }
 
 void findSCCs() {
@@ -201,6 +210,13 @@ void findSCCs() {
 // Evaluate the rules in each component.
 void evaluateRulesInComponent() {
     
+}
+
+std::set<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph) {
+    DependencyGraph result = graph;
+    invert(result);
+    
+    return std::set<DependencyGraph>();
 }
 
 

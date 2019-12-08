@@ -26,6 +26,13 @@ std::string extern evaluateQueryItem(Relation &result,
 std::string extern evaluateQueries(Database *database, DatalogProgram *program, bool printingHeader = true);
 std::string extern evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies = false);
 
+/// Lists all dependent and independent rules in the given @c program.
 DependencyGraph* buildDependencyGraph(DatalogProgram *program);
+
+/// Reverses the direction of each edge in @c graph.
+void invert(DependencyGraph& graph);
+
+/// Returns a set of the strongly-connected components of the given @c graph.
+std::set<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph);
 
 #endif /* EvaluatingDatabases_h */
