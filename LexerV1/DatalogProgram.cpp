@@ -17,23 +17,39 @@ DatalogProgram::DatalogProgram(std::string identifier) {
 }
 
 DatalogProgram::~DatalogProgram() {
-    for (unsigned int i = 0; i < schemes.size(); i += 1) {
-        delete schemes.at(i);
+    for (auto scheme : schemes) {
+        if (scheme == nullptr) { continue; }
+        scheme->release();
+        if (!scheme->isOwned()) {
+            delete scheme;
+        }
     }
     schemes.clear();
     
-    for (unsigned int i = 0; i < facts.size(); i += 1) {
-        delete facts.at(i);
+    for (auto fact : facts) {
+        if (fact == nullptr) { continue; }
+        fact->release();
+        if (!fact->isOwned()) {
+            delete fact;
+        }
     }
     facts.clear();
     
-    for (unsigned int i = 0; i < rules.size(); i += 1) {
-        delete rules.at(i);
+    for (auto rule : rules) {
+        if (rule == nullptr) { continue; }
+        rule->release();
+        if (!rule->isOwned()) {
+            delete rule;
+        }
     }
     rules.clear();
     
-    for (unsigned int i = 0; i < queries.size(); i += 1) {
-        delete queries.at(i);
+    for (auto query : queries) {
+        if (query == nullptr) { continue; }
+        query->release();
+        if (!query->isOwned()) {
+            delete query;
+        }
     }
     queries.clear();
 }
@@ -76,38 +92,66 @@ std::string DatalogProgram::getIdentifier() {
 
 int DatalogProgram::addScheme(Predicate* scheme) {
     schemes.push_back(scheme);
+    scheme->retain();
     return static_cast<int>(schemes.size());
 }
 
 int DatalogProgram::addFact(Predicate* fact) {
     facts.push_back(fact);
+    fact->retain();
     return static_cast<int>(facts.size());
 }
 
 int DatalogProgram::addRule(Rule* rule) {
     rules.push_back(rule);
+    rule->retain();
     return static_cast<int>(rules.size());
 }
 
 int DatalogProgram::addQuery(Predicate* query) {
     queries.push_back(query);
+    query->retain();
     return static_cast<int>(queries.size());
 }
 
 void DatalogProgram::setSchemes(std::vector<Predicate *> &schemes) {
+    for (auto scheme : this->schemes) {
+        scheme->release();
+    }
     this->schemes = schemes;
+    for (auto scheme : schemes) {
+        scheme->retain();
+    }
 }
 
 void DatalogProgram::setFacts(std::vector<Predicate *> &facts) {
+    for (auto fact : this->facts) {
+        fact->release();
+    }
     this->facts = facts;
+    for (auto fact : facts) {
+        fact->retain();
+    }
 }
 
 void DatalogProgram::setRules(std::vector<Rule *> &rules) {
+    for (auto rule : this->rules) {
+        rule->release();
+    }
     this->rules = rules;
+    for (auto rule : rules) {
+        rule->retain();
+    }
 }
 
 void DatalogProgram::setQueries(std::vector<Predicate *> &queries) {
+    for (auto query : this->queries) {
+        query->release();
+    }
     this->queries = queries;
+    for (auto query : queries) {
+        query->retain();
+    }
 }
 
 const std::vector<Predicate*> DatalogProgram::getSchemes() {

@@ -69,6 +69,7 @@ private:
 public:
     Node(Rule* primaryRule = nullptr);
     Node(const Node &other);
+    ~Node();
     
     int getPostOrderNumber() const;
     void setPostOrderNumber(int num);

@@ -14,8 +14,9 @@
 #include <string>
 #include <vector>
 #include "Token.h"
+#include "Object.hpp"
 
-class Production {
+class Production: public Object {
 public:
     /// Returns a string representation of the receiver.
     virtual std::string toString() = 0;

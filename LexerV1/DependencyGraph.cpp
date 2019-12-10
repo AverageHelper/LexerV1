@@ -246,6 +246,10 @@ DependencyGraph::Node::Node(const DependencyGraph::Node &other) {
     this->postOrderNumber = other.postOrderNumber;
 }
 
+DependencyGraph::Node::~Node() {
+    
+}
+
 const std::set<int>& DependencyGraph::Node::getAdjacencies() const {
     return this->adjacencies;
 }

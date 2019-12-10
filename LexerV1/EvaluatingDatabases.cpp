@@ -397,5 +397,7 @@ std::string evaluateRules(Database *database, DatalogProgram *program, bool opti
             << " passes through the Rules." << std::endl << std::endl;
     }
     
+    delete dependencies;
+    
     return str.str();
 }

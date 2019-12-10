@@ -16,7 +16,6 @@ private:
     TokenType type;
     std::string identifier;
     std::vector<std::string> contents;
-    int referenceCount;
     
 public:
     Predicate(TokenType type, std::string identifier);
@@ -32,10 +31,6 @@ public:
     std::string getIdentifier();
     std::vector<std::string> getItems();
     std::string toString() override;
-    
-    bool isOwned() const;
-    void retain();
-    void release();
 };
 
 #endif /* Predicate_h */
