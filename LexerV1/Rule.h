@@ -28,6 +28,8 @@ public:
     void setPredicates(std::vector<Predicate*> predicates);
     
     std::string toString() override;
+    
+    bool operator ==(const Rule &other);
 };
 
 #endif /* Rule_h */

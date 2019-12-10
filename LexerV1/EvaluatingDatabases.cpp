@@ -203,20 +203,151 @@ void invert(DependencyGraph& graph) {
     graph = result;
 }
 
-void findSCCs() {
-    // Find the strongly connected components (SCCs).
+std::vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph) {
+    std::vector<DependencyGraph> result = std::vector<DependencyGraph>();
+    
+    // Find the strongly-connected components (SCCs).
+    DependencyGraph reversed = graph;
+    invert(reversed);
+    std::vector<std::pair<int, DependencyGraph::Node>> ordering = reversed.postOrdering();
+    
+    if (ordering.empty()) { return result; }
+    
+    // Find SCCs:
+    // Run DFS on the original dependency graph starting from the node with the largest post-order number.
+    // Any node visited during the DFS is part of the SCC.
+    std::set<int> visited = std::set<int>();
+    std::stack<int> stack = std::stack<int>();
+    
+    for (int idx = static_cast<int>(ordering.size()) - 1; idx >= 0; idx -= 1) {
+        DependencyGraph scc = DependencyGraph();
+        int idWithHighestPONum = ordering.at(idx).first;
+        
+        if (visited.find(idWithHighestPONum) == visited.end()) { // If not yet visited...
+            stack.push(idWithHighestPONum); // Push the p-o number.
+        } else {
+            continue;
+        }
+        
+        while (!stack.empty()) {
+            int currentNode = stack.top();
+            
+            bool alreadyVisited = !visited.insert(currentNode).second;
+            if (alreadyVisited) {
+                DependencyGraph::Node node = graph.getGraph().at(currentNode);
+                scc.addVertex(node, currentNode);
+                stack.pop();
+                continue;
+            }
+            
+            std::set<int> adjacencies = graph.getGraph().at(currentNode).getAdjacencies();
+            while (!adjacencies.empty()) {
+                // Push adjacencies onto the stack in reverse-PO-number order
+                int maxPostOrderNumber = -1;
+                int nodeWithMaxPONum = -1;
+                for (auto id : adjacencies) {
+                    if (visited.find(id) == visited.end()) { // If not already visited...
+                        maxPostOrderNumber =
+                            std::max(maxPostOrderNumber, graph.getGraph().at(id).getPostOrderNumber());
+                        nodeWithMaxPONum = id;
+                    } else { // If already visited...
+                        adjacencies.erase(id); // forget about it
+                        break;
+                    }
+                }
+                if (nodeWithMaxPONum >= 0) {
+                    stack.push(nodeWithMaxPONum);
+                    adjacencies.erase(nodeWithMaxPONum);
+                }
+            }
+            
+        }
+        
+        result.push_back(scc);
+    }
+    
+    return result;
 }
 
 // Evaluate the rules in each component.
-void evaluateRulesInComponent() {
+std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *database, bool& didAddToDatabase, bool graphOptimized) {
+    std::ostringstream str = std::ostringstream();
+    std::map<std::string, std::set<std::string>> printedTuples =
+        std::map<std::string, std::set<std::string>>();
     
-}
-
-std::set<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph) {
-    DependencyGraph result = graph;
-    invert(result);
+    for (auto pair : graph.getGraph()) {
+        Rule* rule = pair.second.getPrimaryRule();
+        str << rule->toString();
+        
+        //  Evaluate the predicates on the right-hand side of the rule
+        std::vector<Relation> intermediates = std::vector<Relation>();
+        std::vector<std::string> tuplesToPrint = std::vector<std::string>();
+        
+        for (auto predicate : rule->getPredicates()) {
+            Relation* relation = database->relationWithName(predicate->getIdentifier());
+            if (relation == nullptr) {
+                continue;
+            }
+            Relation intermediateRelation = Relation(*relation);
+            str << evaluateQueryItem(intermediateRelation, database, predicate, false);
+            intermediates.push_back(intermediateRelation);
+        }
+        
+        if (intermediates.empty()) {
+            continue;
+        }
+        
+        //  Join the relations that result
+        Relation ruleRelation = *intermediates.begin();
+        if (intermediates.size() > 1) {
+            for (auto relation : intermediates) {
+                ruleRelation = ruleRelation.joinedWith(relation);
+            }
+        }
+        
+        //  Project the columns that appear in the head predicate
+        Tuple newScheme = Tuple(rule->getHeadPredicate()->getItems());
+        ruleRelation.project(newScheme);
+        ruleRelation.setName(rule->getHeadPredicate()->getIdentifier());
+        Relation* headRelation = database->relationWithName(rule->getHeadPredicate()->getIdentifier());
+        
+        //  Rename the relation to make it union-compatible
+        for (unsigned int i = 0; i < headRelation->getScheme().size(); i += 1) {
+            std::string oldCol = ruleRelation.getScheme().at(i);
+            std::string newCol = headRelation->getScheme().at(i);
+            ruleRelation.rename(oldCol, newCol);
+        }
+        
+        //  Union with the relation in the database
+        for (auto t : headRelation->getContents()) {
+            std::string key = ruleRelation.getName();
+            std::string output = headRelation->stringForTuple(t);
+            printedTuples[key].insert(output);
+        }
+        ruleRelation = headRelation->unionWith(ruleRelation);
+        if (database->addRelation(new Relation(ruleRelation))) {
+            didAddToDatabase = true; // True if we actually changed something.
+            
+            for (Tuple t : ruleRelation.getContents()) {
+                std::string key = ruleRelation.getName();
+                std::string output = ruleRelation.stringForTuple(t);
+                if (printedTuples.find(key) == printedTuples.end() ||
+                    printedTuples[key].find(output) == printedTuples[key].end()) {
+                    // Only print if we've not yet printed this tuple for this relation.
+                    tuplesToPrint.push_back(output);
+                    // Add output to a vector of tuples printed for ruleRelation.name
+                    printedTuples[key].insert(output);
+                }
+            }
+        }
+        
+        str << std::endl;
+        for (auto val : tuplesToPrint) {
+            str << "  " << val << std::endl;
+        }
+    }
     
-    return std::set<DependencyGraph>();
+    return str.str();
 }
 
 
@@ -224,94 +355,47 @@ std::set<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyG
 
 std::string evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies) {
     std::ostringstream str = std::ostringstream();
-    str << "Rule Evaluation" << std::endl;
+
+    DependencyGraph* dependencies = buildDependencyGraph(program);
+    std::vector<DependencyGraph> components;
+    
+    if (optimizeDependencies) {
+        str << "Dependency Graph" << std::endl;
+        str << dependencies->toString() << std::endl;
+        components = stronglyConnectedComponentsFromGraph(*dependencies);
+        
+    } else {
+        components = { *dependencies };
+    }
     
     bool didAddToDatabase = true;
     int passCount = 0;
     
-    std::map<std::string, std::set<std::string>> printedTuples
-        = std::map<std::string, std::set<std::string>>();
-    
-    while (didAddToDatabase) {
-        didAddToDatabase = false;
+    str << "Rule Evaluation" << std::endl;
+    for (auto subgraph : components) {
+        if (optimizeDependencies) {
+            str << "SCC: " << subgraph.verticesByIDToString() << std::endl;
+        }
         
-        for (auto rule : program->getRules()) {
+        while (didAddToDatabase) {
+            didAddToDatabase = false;
             
-            str << rule->toString();
+            str << evaluateRulesInSubgraph(subgraph, database, didAddToDatabase, optimizeDependencies);
             
-            //  Evaluate the predicates on the right-hand side of the rule
-            std::vector<Relation> intermediates = std::vector<Relation>();
-            std::vector<std::string> tuplesToPrint = std::vector<std::string>();
-            
-            for (auto predicate : rule->getPredicates()) {
-                Relation* relation = database->relationWithName(predicate->getIdentifier());
-                if (relation == nullptr) {
-                    continue;
-                }
-                Relation intermediateRelation = Relation(*relation);
-                str << evaluateQueryItem(intermediateRelation, database, predicate, false);
-                intermediates.push_back(intermediateRelation);
-            }
-            
-            if (intermediates.empty()) {
-                continue;
-            }
-            
-            //  Join the relations that result
-            Relation ruleRelation = *intermediates.begin();
-            if (intermediates.size() > 1) {
-                for (auto relation : intermediates) {
-                    ruleRelation = ruleRelation.joinedWith(relation);
-                }
-            }
-            
-            //  Project the columns that appear in the head predicate
-            Tuple newScheme = Tuple(rule->getHeadPredicate()->getItems());
-            ruleRelation.project(newScheme);
-            ruleRelation.setName(rule->getHeadPredicate()->getIdentifier());
-            Relation* headRelation = database->relationWithName(rule->getHeadPredicate()->getIdentifier());
-            
-            //  Rename the relation to make it union-compatible
-            for (unsigned int i = 0; i < headRelation->getScheme().size(); i += 1) {
-                std::string oldCol = ruleRelation.getScheme().at(i);
-                std::string newCol = headRelation->getScheme().at(i);
-                ruleRelation.rename(oldCol, newCol);
-            }
-            
-            //  Union with the relation in the database
-            for (auto t : headRelation->getContents()) {
-                std::string key = ruleRelation.getName();
-                std::string output = headRelation->stringForTuple(t);
-                printedTuples[key].insert(output);
-            }
-            ruleRelation = headRelation->unionWith(ruleRelation);
-            if (database->addRelation(new Relation(ruleRelation))) {
-                didAddToDatabase = true; // True if we actually changed something.
-                
-                for (Tuple t : ruleRelation.getContents()) {
-                    std::string key = ruleRelation.getName();
-                    std::string output = ruleRelation.stringForTuple(t);
-                    if (printedTuples.find(key) == printedTuples.end() ||
-                        printedTuples[key].find(output) == printedTuples[key].end()) {
-                        // Only print if we've not yet printed this tuple for this relation.
-                        tuplesToPrint.push_back(output);
-                        // Add output to a vector of tuples printed for ruleRelation.name
-                        printedTuples[key].insert(output);
-                    }
-                }
-            }
-            
-            str << std::endl;
-            for (auto val : tuplesToPrint) {
-                str << "  " << val << std::endl;
+            if (didAddToDatabase || !optimizeDependencies) {
+                passCount += 1;
             }
         }
         
-        passCount += 1;
+        if (optimizeDependencies) {
+            str << passCount << " passes: " << subgraph.verticesByIDToString() << std::endl;
+        }
     }
     
-    str << std::endl << "Schemes populated after " << passCount
-        << " passes through the Rules." << std::endl << std::endl;
+    if (!optimizeDependencies) {
+        str << std::endl << "Schemes populated after " << passCount
+            << " passes through the Rules." << std::endl << std::endl;
+    }
     
     return str.str();
 }

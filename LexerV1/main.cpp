@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     
     evaluateSchemes(database, program);
     evaluateFacts(database, program);
-    output << evaluateRules(database, program);
+    output << evaluateRules(database, program, true);
     output << evaluateQueries(database, program);
     
     std::cout << output.str() << std::endl;

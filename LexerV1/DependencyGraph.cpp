@@ -67,6 +67,15 @@ bool DependencyGraph::addDependency(Rule* parent, Rule* other) {
     return parentNodeID > lastIndex; // Increased index if added
 }
 
+bool DependencyGraph::addVertex(Node node, int identifier) {
+    if (this->nodes.count(identifier) > 0 &&
+        this->nodes.at(identifier) == node) {
+        return false;
+    }
+    this->nodes[identifier] = node;
+    return true;
+}
+
 Rule* DependencyGraph::dependencyWithIdentifier(const std::string& identifier) {
     for (auto pair : this->nodes) {
         if (pair.second.getName() == identifier) {
@@ -81,7 +90,21 @@ const std::map<int, DependencyGraph::Node>& DependencyGraph::getGraph() const {
     return this->nodes;
 }
 
+const std::vector<DependencyGraph::Node> DependencyGraph::allVertices() const {
+    std::vector<Node> result = std::vector<Node>();
+    
+    for (auto pair : nodes) {
+        result.push_back(pair.second);
+    }
+    
+    return result;
+}
+
 int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int startingPostorder) {
+    if (this->nodes.empty()) {
+        return -1;
+    }
+    
     std::set<int> visited = std::set<int>();
     std::stack<int> stack = std::stack<int>();
     int previousPostOrder = startingPostorder;
@@ -112,13 +135,50 @@ int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int 
     return previousPostOrder;
 }
 
-std::string DependencyGraph::postOrderNumbers() {
+void DependencyGraph::computePostOrderNumbersForVertices() {
     // Run DFS-Forest on the dependency graph.
     int nextPostorder = computePostOrderNumbersForVectorsStartingAt(0);
     for (auto pair : nodes) {
         if (pair.second.getPostOrderNumber() > -1) { continue; }
         nextPostorder = computePostOrderNumbersForVectorsStartingAt(pair.first, nextPostorder);
     }
+}
+
+std::vector<std::pair<int, DependencyGraph::Node>> DependencyGraph::postOrdering() {
+    computePostOrderNumbersForVertices(); // Guarantees each node has a postOrderNumber >= 1
+    
+    std::vector<std::pair<int, Node>> result = std::vector<std::pair<int, Node>>();
+    if (nodes.empty()) { return result; }
+    result.push_back(*nodes.begin());
+    
+    for (auto pair : nodes) { // For each vertex...
+        size_t oldSize = result.size();
+        
+        // Insertion sort:
+        for (size_t index = 0; index < result.size(); index += 1) { // For each sorted node...
+            
+            if (pair.second.getPostOrderNumber() < result.at(index).second.getPostOrderNumber()) {
+                // If we're smaller, go on in!
+                result.insert(result.begin() + index, pair);
+                break;
+                
+            } else if (pair.second.getPostOrderNumber() == result.at(index).second.getPostOrderNumber()) {
+                // If we're the same, go to next.
+                oldSize += 1;
+            }
+        }
+        
+        if (oldSize == result.size()) {
+            // Didn't insert... Append!
+            result.push_back(pair);
+        }
+    }
+    
+    return result;
+}
+
+std::string DependencyGraph::postOrderNumbers() {
+    computePostOrderNumbersForVertices();
     
     // Print the post-order numbers
     std::ostringstream result = std::ostringstream();
@@ -129,7 +189,7 @@ std::string DependencyGraph::postOrderNumbers() {
     return result.str();
 }
 
-std::string DependencyGraph::toString() {
+std::string DependencyGraph::toString() const {
     std::ostringstream result = std::ostringstream();
     
     for (auto pair : nodes) {
@@ -153,6 +213,21 @@ std::string DependencyGraph::toString() {
     }
     
     return result.str();
+}
+
+std::string DependencyGraph::verticesByIDToString() const {
+    std::ostringstream str = std::ostringstream();
+    
+    size_t verticesListed = 0;
+    for (auto pair : getGraph()) {
+        str << "R" << pair.first;
+        verticesListed += 1;
+        if (verticesListed < getGraph().size()) {
+            str << ",";
+        }
+    }
+    
+    return str.str();
 }
 
 
@@ -196,4 +271,9 @@ int DependencyGraph::Node::getPostOrderNumber() const {
 
 void DependencyGraph::Node::setPostOrderNumber(int num) {
     this->postOrderNumber = num;
+}
+
+bool DependencyGraph::Node::operator ==(const Node &other) const {
+    return (*this->primaryRule == *other.primaryRule &&
+            this->adjacencies == other.adjacencies);
 }

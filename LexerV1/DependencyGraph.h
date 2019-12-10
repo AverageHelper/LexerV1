@@ -24,13 +24,20 @@ public:
     DependencyGraph();
     
     const std::map<int, Node>& getGraph() const;
+    const std::vector<Node> allVertices() const;
     
     /// Lists @c other as dependent upon the given @c parent relation.
     bool addDependency(Rule* parent, Rule *other);
+    bool addVertex(Node node, int identifier);
     Rule* dependencyWithIdentifier(const std::string& identifier);
     
+    /// A string representation of the graph's post-order numbers.
     std::string postOrderNumbers();
-    std::string toString();
+    
+    /// Returns a @c vector of vertices, in order of their post-order number.
+    std::vector<std::pair<int, Node>> postOrdering();
+    std::string toString() const;
+    std::string verticesByIDToString() const;
     
 private:
     std::map<int, Node> nodes;
@@ -44,7 +51,10 @@ private:
     /// @returns A @c pair containing the node and its ID.
     const std::pair<int, DependencyGraph::Node> nodeForRule(Rule* rule);
     
-    /// Computes post-order numbers on the graph, starting at the node with the given index @c start.
+    /// Computes post-order numbers for each node on the graph.
+    void computePostOrderNumbersForVertices();
+    
+    /// Computes post-order numbers for each node on the graph, starting at the node with the given index @c start.
     /// @Returns The next post-order number, if we were to run another DFS on a different part of the forest.
     int computePostOrderNumbersForVectorsStartingAt(int start, int startingPostorder = 1);
 };
@@ -68,6 +78,8 @@ public:
     
     const std::set<int>& getAdjacencies() const;
     bool addAdjacency(int nodeID);
+    
+    bool operator ==(const Node &other) const;
 };
 
 #endif /* DependencyGraph_h */

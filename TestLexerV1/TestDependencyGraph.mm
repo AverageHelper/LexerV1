@@ -176,6 +176,79 @@
     return self.workingURL;
 }
 
+// MARK: - Evaluating Datalog
+
+- (void)runFactsFromInputFile:(int)fileNum
+                   withPrefix:(nonnull NSString *)prefix
+                     inDomain:(nonnull NSString *)fileDomain {
+    // Translate integer to string
+    NSString *testID = [[NSNumber numberWithInt:fileNum] stringValue];
+    return [self runFactsFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
+}
+
+- (void)runFactsFromInputFileNamed:(nonnull NSString *)testID
+                        withPrefix:(nonnull NSString *)prefix
+                          inDomain:(nonnull NSString *)fileDomain {
+    DatalogProgram* program = [self datalogFromInputFileNamed:testID withPrefix:prefix inDomain:fileDomain];
+    XCTAssertNotEqual(program, nullptr, "No valid program from in30.txt");
+    if (program == nullptr) {
+        return;
+    }
+    
+    Database* database = new Database();
+    
+    evaluateSchemes(database, program);
+    evaluateFacts(database, program);
+    std::string output = "";
+    output += evaluateRules(database, program, true);
+    output += evaluateQueries(database, program, true);
+    
+    // Write output
+    NSString *resultString = [NSString stringWithCString:output.c_str() encoding:NSUTF8StringEncoding];
+    resultString = [resultString stringByAppendingString:@"\n"];
+    NSURL *testResult = [self writeStringToWorkingDirectory:resultString];
+    if (testResult == nil) {
+        XCTAssert(false, "Failed to write output to test file.");
+        return;
+    }
+    
+    NSString *answerPrefix;
+    if ([prefix isEqualToString:@"in"]) {
+        answerPrefix = @"out";
+    } else {
+        answerPrefix = @"answer";
+    }
+    
+    NSString *answerFileName = [answerPrefix stringByAppendingString:testID];
+    NSString *answerKey = [self filePathForTestFileNamed:answerFileName inDomain:fileDomain];
+    NSString *diff = [TestUtils getDiffBetweenFileAtPath:testResult.path andPath:answerKey];
+    
+    // Make sure diff comes out empty
+    bool success = [diff isEqualToString:@"\n"] || [diff isEqualToString:@""];
+    if (!success) {
+        NSLog(@"%@", diff);
+    }
+    
+    XCTAssert(success, @"diff '%@/%@.txt' returned '%@'", fileDomain, answerFileName, diff);
+}
+
+// MARK: - Efficient Evaluations
+
+- (void)testBasicTests {
+    NSString *domain = @"Basic Tests";
+    NSString *prefix = @"in";
+    
+    [self runFactsFromInputFile:50 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:54 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:55 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:56 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:58 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:59 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:61 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:62 withPrefix:prefix inDomain:domain];
+    [self runFactsFromInputFile:64 withPrefix:prefix inDomain:domain];
+}
+
 // MARK: - Sructures
 
 - (void)testNode {
@@ -323,8 +396,84 @@
     graphStr = "R0: 3\nR1: 2\nR2: 1\nR3: 5\nR4: 4\n";
     XCTAssert(result == graphStr, "Incorrect post-order numbers of inverted graph.");
     
+    std::vector<std::pair<int, DependencyGraph::Node>> postOrdering = reversed->postOrdering();
+    std::vector<std::string> postOrderingStrings = std::vector<std::string>();
+    for (auto pair : postOrdering) {
+        postOrderingStrings.push_back("R" + std::to_string(pair.first));
+    }
+    std::vector<std::string> expectedPostOrderingStrings = { "R2", "R1", "R0", "R4", "R3" };
+    XCTAssert(postOrderingStrings == expectedPostOrderingStrings, "Wrong post-order ordering returned.");
+    
     delete program;
     delete graph;
+}
+
+- (void)testStronglyConnectedComponents {
+    /*
+     A(X,Y) :- B(X,Y), C(X,Y). # R0
+     B(X,Y) :- A(X,Y), D(X,Y). # R1
+     B(X,Y) :- B(Y,X).         # R2
+     E(X,Y) :- F(X,Y), G(X,Y). # R3
+     E(X,Y) :- E(X,Y), F(X,Y). # R4
+     */
+    Predicate* a = new Predicate(RULES, "A"); a->copyItemsIn({ "X", "Y" }); // A(X,Y)
+    Predicate* b1 = new Predicate(RULES, "B"); b1->copyItemsIn({ "X", "Y" }); // B(X,Y)
+    Predicate* b2 = new Predicate(RULES, "B"); b2->copyItemsIn({ "Y", "X" }); // B(Y,X)
+    Predicate* c = new Predicate(RULES, "C"); c->copyItemsIn({ "X", "Y" }); // C(X,Y)
+    Predicate* d = new Predicate(RULES, "D"); d->copyItemsIn({ "X", "Y" }); // D(X,Y)
+    Predicate* e = new Predicate(RULES, "E"); e->copyItemsIn({ "X", "Y" }); // E(X,Y)
+    Predicate* f = new Predicate(RULES, "F"); f->copyItemsIn({ "X", "Y" }); // F(X,Y)
+    Predicate* g = new Predicate(RULES, "G"); g->copyItemsIn({ "X", "Y" }); // G(X,Y)
+    
+    Rule* r0 = new Rule(); r0->setHeadPredicate(a); r0->setPredicates({ b1, c }); // A(X,Y) :- B(X,Y),C(X,Y).
+    Rule* r1 = new Rule(); r1->setHeadPredicate(b1); r1->setPredicates({ a, d }); // B(X,Y) :- A(X,Y),D(X,Y).
+    Rule* r2 = new Rule(); r2->setHeadPredicate(b1); r2->setPredicates({ b2 }); // B(X,Y) :- B(Y,X).
+    Rule* r3 = new Rule(); r3->setHeadPredicate(e); r3->setPredicates({ f, g }); // E(X,Y) :- F(X,Y),G(X,Y).
+    Rule* r4 = new Rule(); r4->setHeadPredicate(e); r4->setPredicates({ e, f }); // E(X,Y) :- E(X,Y),F(X,Y).
+    
+    DatalogProgram* program = new DatalogProgram("Prog");
+    std::vector<Rule*> rules = { r0, r1, r2, r3, r4 };
+    program->setRules(rules);
+    
+    /* Graph:
+     R0: R1 R2
+     R1: R0
+     R2: R1 R2
+     R3:
+     R4: R3 R4
+     */
+    
+    DependencyGraph graph = *buildDependencyGraph(program);
+    std::string result = graph.toString();
+    std::string graphStr = "R0:R1,R2\nR1:R0\nR2:R1,R2\nR3:\nR4:R3,R4\n";
+    XCTAssert(result == graphStr, "Built dependencies incorrectly.");
+    
+    std::vector<DependencyGraph> components = stronglyConnectedComponentsFromGraph(graph);
+    /*
+     The first SCC contains only node R3.
+     The second SCC contains only node R4.
+     The next SCC contains nodes R0, R1, and R2.
+     */
+    XCTAssertEqual(components.size(), 3, "Wrong number of components returned.");
+    if (components.size() == 3) {
+        // First SCC
+        bool firstEqual = components.at(0).getGraph().at(3) == graph.getGraph().at(3);
+        XCTAssert(firstEqual,
+                  "Wrong component at SCC 1. Expected R3.");
+        // Second SCC
+        XCTAssert(components.at(1).getGraph().at(4) == graph.getGraph().at(4),
+                  "Wrong component at SCC 2. Expected R4.");
+
+        // Third SCC
+        XCTAssert(components.at(2).getGraph().at(0) == graph.getGraph().at(0),
+                  "Wrong first component at SCC 2. Expected R0.");
+        XCTAssert(components.at(2).getGraph().at(1) == graph.getGraph().at(1),
+                  "Wrong first component at SCC 2. Expected R1.");
+        XCTAssert(components.at(2).getGraph().at(2) == graph.getGraph().at(2),
+                  "Wrong first component at SCC 2. Expected R2.");
+    }
+    
+    delete program;
 }
 
 @end

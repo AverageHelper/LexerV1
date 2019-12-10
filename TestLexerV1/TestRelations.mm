@@ -180,7 +180,7 @@
 }
 
 
-// MARK: - Evaluating Facts
+// MARK: - Evaluating Datalog
 
 - (void)runFactsFromInputFile:(int)fileNum
                    withPrefix:(nonnull NSString *)prefix
