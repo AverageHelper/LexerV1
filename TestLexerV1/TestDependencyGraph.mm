@@ -33,9 +33,21 @@
     }
 }
 
++(void)tearDown {
+    NSString *fileName = [NSString stringWithCString:__FILE_NAME__ encoding:NSUTF8StringEncoding];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSURL *tmp = [fileManager temporaryDirectory];
+    
+    // ...tmp/TestDependencyGraph
+    fileName = [fileName stringByDeletingPathExtension];
+    tmp = [tmp URLByAppendingPathComponent:fileName isDirectory:YES];
+    
+    [TestUtils destroyFileAt:tmp];
+}
+
 // MARK: - Utility
 
-- (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
++ (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
     return [TestUtils testFilesPathWithFolder:@"Dependency Graph Test Files" inDomain:testDomain];
 }
 
@@ -43,7 +55,7 @@
 /// Returns the path of a test file with the given @c name from the given @c domain.
 - (nonnull NSString *)filePathForTestFileNamed:(nonnull NSString *)testName
                                       inDomain:(nonnull NSString *)testDomain {
-    NSString *path = [self testFilesPathInDomain:testDomain];    // ex: "100 Bucket"
+    NSString *path = [TestDependencyGraph testFilesPathInDomain:testDomain];    // ex: "100 Bucket"
     path = [path stringByAppendingPathComponent:testName];  // ex: "answer1"
     path = [path stringByAppendingPathExtension:@"txt"];
     
@@ -52,7 +64,7 @@
 
 - (std::ifstream)openInputStreamForTestNamed:(nonnull NSString *)testName
                                     inDomain:(nonnull NSString *)domain {
-    NSString *path = [self testFilesPathInDomain:domain];
+    NSString *path = [TestDependencyGraph testFilesPathInDomain:domain];
     path = [path stringByAppendingPathComponent:testName];  // ex: "in10"
     path = [path stringByAppendingPathExtension:@"txt"];
     

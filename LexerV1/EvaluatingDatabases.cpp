@@ -270,7 +270,9 @@ std::vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const Dependen
 }
 
 // Evaluate the rules in each component.
-std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *database, bool& didAddToDatabase, bool graphOptimized) {
+std::string evaluateRulesInSubgraph(const DependencyGraph& graph,
+                                    Database *database,
+                                    bool& didAddToDatabase) {
     std::ostringstream str = std::ostringstream();
     std::map<std::string, std::set<std::string>> printedTuples =
         std::map<std::string, std::set<std::string>>();
@@ -325,6 +327,7 @@ std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *data
             printedTuples[key].insert(output);
         }
         ruleRelation = headRelation->unionWith(ruleRelation);
+        
         if (database->addRelation(new Relation(ruleRelation))) {
             didAddToDatabase = true; // True if we actually changed something.
             
@@ -351,7 +354,7 @@ std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *data
 }
 
 
-// MARK: Evaluate
+// MARK: - Evaluate
 
 std::string evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies) {
     std::ostringstream str = std::ostringstream();
@@ -377,24 +380,33 @@ std::string evaluateRules(Database *database, DatalogProgram *program, bool opti
             str << "SCC: " << subgraph.verticesByIDToString() << std::endl;
         }
         
+        didAddToDatabase = true;
         while (didAddToDatabase) {
             didAddToDatabase = false;
             
-            str << evaluateRulesInSubgraph(subgraph, database, didAddToDatabase, optimizeDependencies);
+            std::string evalResult = evaluateRulesInSubgraph(subgraph, database, didAddToDatabase);
             
-            if (didAddToDatabase || !optimizeDependencies) {
+            if (optimizeDependencies && components.size() == 1 && components.at(0).getGraph().size() == 1 && !didAddToDatabase) {
+                str << evalResult;
+                
+            } else if (didAddToDatabase || !(optimizeDependencies && components.size() > 1)) {
+                str << evalResult;
                 passCount += 1;
             }
         }
         
         if (optimizeDependencies) {
             str << passCount << " passes: " << subgraph.verticesByIDToString() << std::endl;
+        } else {
+            str << std::endl << "Schemes populated after " << passCount
+                << " passes through the Rules." << std::endl << std::endl;
         }
+        
+        passCount = 0;
     }
     
-    if (!optimizeDependencies) {
-        str << std::endl << "Schemes populated after " << passCount
-            << " passes through the Rules." << std::endl << std::endl;
+    if (optimizeDependencies) {
+        str << std::endl;
     }
     
     delete dependencies;

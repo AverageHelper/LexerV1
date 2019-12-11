@@ -24,7 +24,7 @@ std::string extern evaluateQueryItem(Relation &result,
                                      Predicate *query,
                                      bool outputSuccess = true);
 std::string extern evaluateQueries(Database *database, DatalogProgram *program, bool printingHeader = true);
-std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *database, bool& didAddToDatabase, bool printWorkingComponent);
+std::string evaluateRulesInSubgraph(const DependencyGraph& graph, Database *database, bool& didAddToDatabase);
 std::string extern evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies = false);
 
 /// Lists all dependent and independent rules in the given @c program.

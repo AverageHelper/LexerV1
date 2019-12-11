@@ -36,6 +36,18 @@
     }
 }
 
++(void)tearDown {
+    NSString *fileName = [NSString stringWithCString:__FILE_NAME__ encoding:NSUTF8StringEncoding];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSURL *tmp = [fileManager temporaryDirectory];
+    
+    // ...tmp/TestDependencyGraph
+    fileName = [fileName stringByDeletingPathExtension];
+    tmp = [tmp URLByAppendingPathComponent:fileName isDirectory:YES];
+    
+    [TestUtils destroyFileAt:tmp];
+}
+
 // MARK: - Utility
 
 - (nonnull NSString *)testFilesPathInDomain:(nullable NSString *)testDomain {
