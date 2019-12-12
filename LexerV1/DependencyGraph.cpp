@@ -15,6 +15,17 @@ DependencyGraph::DependencyGraph() {
     this->nodes = std::map<int, DependencyGraph::Node>();
 }
 
+DependencyGraph::DependencyGraph(const DependencyGraph& other) {
+    for (auto nodePair : other.nodes) {
+        Node newNode = Node(nodePair.second);
+        this->nodes[nodePair.first] = newNode;
+    }
+}
+
+DependencyGraph::~DependencyGraph() {
+    
+}
+
 int DependencyGraph::getLastIndex() const {
     int max = -1;
     for (auto pair : nodes) {
@@ -23,26 +34,27 @@ int DependencyGraph::getLastIndex() const {
     return max;
 }
 
-int DependencyGraph::appendNode(const Node &node) {
+std::pair<int, DependencyGraph::Node> DependencyGraph::appendNode(const Node& node) {
     int max = getLastIndex();
     
-    nodes[max + 1] = node;
-    return max + 1;
+    return *nodes.insert(std::make_pair(max + 1, node)).first;
+//    nodes[max + 1] = node;
+//    return nodes.at(max + 1);
 }
 
-const std::pair<int, DependencyGraph::Node> DependencyGraph::nodeForRule(Rule* rule) {
+std::pair<int, DependencyGraph::Node> DependencyGraph::nodeForRule(Rule* rule) {
+    if (rule == nullptr) {
+        std::cout << "--- WARNING: Cannot search DependencyGraph for null Rule. ---" << std::endl;
+    }
+    
     for (auto pair : nodes) {
-        int id = pair.first;
-        Node node = pair.second;
-        
-        if (node.getPrimaryRule() == rule) {
-            return std::pair(id, node);
+        // Check each extant pair
+        if (rule != nullptr && *pair.second.getPrimaryRule() == *rule) {
+            return pair;
         }
     }
     
-    Node result = Node(rule);
-    int newID = appendNode(result);
-    return std::pair(newID, result);
+    return appendNode(Node(rule));
 }
 
 bool DependencyGraph::addDependency(Rule* parent, Rule* other) {
@@ -50,13 +62,12 @@ bool DependencyGraph::addDependency(Rule* parent, Rule* other) {
     
     auto parentNodePair = nodeForRule(parent);
     int parentNodeID = parentNodePair.first;
-    Node parentNode = Node(parentNodePair.second);
     
     if (other != nullptr) {
         int otherNodeID = nodeForRule(other).first; // Grab ID of other node
         
-        bool didAdd = parentNode.addAdjacency(otherNodeID);
-        nodes[parentNodeID] = parentNode;
+        bool didAdd = parentNodePair.second.addAdjacency(otherNodeID, other); // Add other node to graph
+        nodes[parentNodeID] = parentNodePair.second;
         
         if (didAdd || otherNodeID > lastIndex) {
             return true;
@@ -67,11 +78,12 @@ bool DependencyGraph::addDependency(Rule* parent, Rule* other) {
     return parentNodeID > lastIndex; // Increased index if added
 }
 
-bool DependencyGraph::addVertex(Node node, int identifier) {
+bool DependencyGraph::addVertex(const Node& node, int identifier) {
     if (this->nodes.count(identifier) > 0 &&
         this->nodes.at(identifier) == node) {
         return false;
     }
+    
     this->nodes[identifier] = node;
     return true;
 }
@@ -86,7 +98,7 @@ Rule* DependencyGraph::dependencyWithIdentifier(const std::string& identifier) {
     return nullptr;
 }
 
-const std::map<int, DependencyGraph::Node>& DependencyGraph::getGraph() const {
+const std::map<int, DependencyGraph::Node>& DependencyGraph::getNodes() const {
     return this->nodes;
 }
 
@@ -124,9 +136,9 @@ int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int 
         }
         
         // The numerically-first index goes next.
-        for (auto idx : nodes.at(currentNode).getAdjacencies()) {
-            if (visited.find(idx) == visited.end()) { // If not already visited...
-                stack.push(idx);
+        for (auto rulePair : nodes.at(currentNode).getAdjacencies()) {
+            if (visited.find(rulePair.first) == visited.end()) { // If not already visited...
+                stack.push(rulePair.first);
             }
         }
         
@@ -189,21 +201,37 @@ std::string DependencyGraph::postOrderNumbers() {
     return result.str();
 }
 
+DependencyGraph DependencyGraph::inverted() const {
+    DependencyGraph result = DependencyGraph();
+    
+    for (auto pair : getNodes()) { // For each node...
+        result.addDependency(pair.second.getPrimaryRule(), nullptr); // Number the node
+        
+        for (auto adj : pair.second.getAdjacencies()) { // For each edge...
+            int ruleID = adj.first;
+            Rule* adjRule = getNodes().at(ruleID).getPrimaryRule();
+            result.addDependency(adjRule, pair.second.getPrimaryRule()); // Reverse it!
+        }
+    }
+    
+    return result;
+}
+
 std::string DependencyGraph::toString() const {
     std::ostringstream result = std::ostringstream();
     
-    for (auto pair : nodes) {
+    for (auto pair : getNodes()) {
         int id = pair.first;
-        Node node = pair.second;
         
         result << "R" << id << ":";
         
+        std::map<int, Rule*> adjacencies = pair.second.getAdjacencies();
         int adjacenciesListed = 0;
-        size_t adjacencyCount = node.getAdjacencies().size();
-        for (int adjID : node.getAdjacencies()) {
-            result << "R" << adjID;
-            adjacenciesListed += 1;
+        size_t adjacencyCount = adjacencies.size();
+        for (auto rulePair : adjacencies) {
+            result << "R" << rulePair.first;
             
+            adjacenciesListed += 1;
             if (adjacenciesListed < adjacencyCount) {
                 result << ",";
             }
@@ -219,10 +247,10 @@ std::string DependencyGraph::verticesByIDToString() const {
     std::ostringstream str = std::ostringstream();
     
     size_t verticesListed = 0;
-    for (auto pair : getGraph()) {
+    for (auto pair : getNodes()) {
         str << "R" << pair.first;
         verticesListed += 1;
-        if (verticesListed < getGraph().size()) {
+        if (verticesListed < getNodes().size()) {
             str << ",";
         }
     }
@@ -236,7 +264,7 @@ std::string DependencyGraph::verticesByIDToString() const {
 
 DependencyGraph::Node::Node(Rule* primaryRule) {
     this->primaryRule = primaryRule;
-    this->adjacencies = std::set<int>();
+    this->adjacencies = std::map<int, Rule*>();
     this->postOrderNumber = -1;
 }
 
@@ -247,15 +275,20 @@ DependencyGraph::Node::Node(const DependencyGraph::Node &other) {
 }
 
 DependencyGraph::Node::~Node() {
-    
+    // :)
 }
 
-const std::set<int>& DependencyGraph::Node::getAdjacencies() const {
+const std::map<int, Rule*>& DependencyGraph::Node::getAdjacencies() const {
     return this->adjacencies;
 }
 
-bool DependencyGraph::Node::addAdjacency(int nodeID) {
-    return this->adjacencies.insert(nodeID).second;
+bool DependencyGraph::Node::addAdjacency(int nodeID, Rule* rule) {
+    if (this->adjacencies.find(nodeID) == adjacencies.end() || // If rule ID doesn't already exist
+        *this->adjacencies.at(nodeID) != *rule) { // If rule is different
+        this->adjacencies[nodeID] = rule;
+        return true;
+    }
+    return false;
 }
 
 std::string DependencyGraph::Node::getName() const {

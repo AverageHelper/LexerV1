@@ -189,35 +189,22 @@ DependencyGraph* buildDependencyGraph(DatalogProgram *program) {
 
 void invert(DependencyGraph& graph) {
     // Build the reverse dependency graph.
-    DependencyGraph result = DependencyGraph();
-    
-    for (auto pair : graph.getGraph()) { // For each node...
-        result.addDependency(pair.second.getPrimaryRule(), nullptr); // Number the node
-        
-        for (auto adj : pair.second.getAdjacencies()) { // For each edge...
-            Rule* adjRule = graph.getGraph().at(adj).getPrimaryRule();
-            result.addDependency(adjRule, pair.second.getPrimaryRule()); // Reverse it!
-        }
-    }
-    
-    graph = result;
+    graph = graph.inverted();
 }
 
-std::vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph) {
-    std::vector<DependencyGraph> result = std::vector<DependencyGraph>();
-    
+void stronglyConnectedComponentsFromGraphReference(const DependencyGraph* graph,
+                                                   vector<DependencyGraph>& result) {
     // Find the strongly-connected components (SCCs).
-    DependencyGraph reversed = graph;
-    invert(reversed);
-    std::vector<std::pair<int, DependencyGraph::Node>> ordering = reversed.postOrdering();
+    DependencyGraph reversed = graph->inverted();
+    vector<pair<int, DependencyGraph::Node>> ordering = reversed.postOrdering();
     
-    if (ordering.empty()) { return result; }
+    if (ordering.empty()) { return; }
     
     // Find SCCs:
     // Run DFS on the original dependency graph starting from the node with the largest post-order number.
     // Any node visited during the DFS is part of the SCC.
-    std::set<int> visited = std::set<int>();
-    std::stack<int> stack = std::stack<int>();
+    set<int> visited = set<int>();
+    stack<int> stack = std::stack<int>();
     
     for (int idx = static_cast<int>(ordering.size()) - 1; idx >= 0; idx -= 1) {
         DependencyGraph scc = DependencyGraph();
@@ -234,21 +221,22 @@ std::vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const Dependen
             
             bool alreadyVisited = !visited.insert(currentNode).second;
             if (alreadyVisited) {
-                DependencyGraph::Node node = graph.getGraph().at(currentNode);
+                DependencyGraph::Node node = graph->getNodes().at(currentNode);
                 scc.addVertex(node, currentNode);
                 stack.pop();
                 continue;
             }
             
-            std::set<int> adjacencies = graph.getGraph().at(currentNode).getAdjacencies();
+            map<int, Rule*> adjacencies = graph->getNodes().at(currentNode).getAdjacencies();
             while (!adjacencies.empty()) {
                 // Push adjacencies onto the stack in reverse-PO-number order
                 int maxPostOrderNumber = -1;
                 int nodeWithMaxPONum = -1;
-                for (auto id : adjacencies) {
+                for (auto rulePair : adjacencies) {
+                    int id = rulePair.first;
                     if (visited.find(id) == visited.end()) { // If not already visited...
                         maxPostOrderNumber =
-                            std::max(maxPostOrderNumber, graph.getGraph().at(id).getPostOrderNumber());
+                        std::max(maxPostOrderNumber, graph->getNodes().at(id).getPostOrderNumber());
                         nodeWithMaxPONum = id;
                     } else { // If already visited...
                         adjacencies.erase(id); // forget about it
@@ -265,114 +253,155 @@ std::vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const Dependen
         
         result.push_back(scc);
     }
+}
+
+vector<DependencyGraph> stronglyConnectedComponentsFromGraph(const DependencyGraph& graph) {
+    vector<DependencyGraph> result = vector<DependencyGraph>();
+    
+    DependencyGraph* intermediate = new DependencyGraph(graph);
+    stronglyConnectedComponentsFromGraphReference(intermediate, result);
+    delete intermediate;
     
     return result;
 }
 
-// Evaluate the rules in each component.
-std::string evaluateRulesInSubgraph(const DependencyGraph& graph,
-                                    Database *database,
-                                    bool& didAddToDatabase) {
-    std::ostringstream str = std::ostringstream();
-    std::map<std::string, std::set<std::string>> printedTuples =
-        std::map<std::string, std::set<std::string>>();
+string evaluateRule(Rule *rule,
+                    Database *database,
+                    bool &didAddToDatabase,
+                    map<std::string, set<std::string>> &printedTuples) {
+    std::ostringstream result = std::ostringstream();
     
-    for (auto pair : graph.getGraph()) {
-        Rule* rule = pair.second.getPrimaryRule();
-        str << rule->toString();
-        
-        //  Evaluate the predicates on the right-hand side of the rule
-        std::vector<Relation> intermediates = std::vector<Relation>();
-        std::vector<std::string> tuplesToPrint = std::vector<std::string>();
-        
-        for (auto predicate : rule->getPredicates()) {
-            Relation* relation = database->relationWithName(predicate->getIdentifier());
-            if (relation == nullptr) {
-                continue;
-            }
-            Relation intermediateRelation = Relation(*relation);
-            str << evaluateQueryItem(intermediateRelation, database, predicate, false);
-            intermediates.push_back(intermediateRelation);
-        }
-        
-        if (intermediates.empty()) {
+    result << rule->toString();
+    
+    //  Evaluate the predicates on the right-hand side of the rule
+    vector<Relation> intermediates = vector<Relation>();
+    vector<string> tuplesToPrint = vector<string>();
+    
+    for (auto predicate : rule->getPredicates()) {
+        Relation* relation = database->relationWithName(predicate->getIdentifier());
+        if (relation == nullptr) {
             continue;
         }
-        
-        //  Join the relations that result
-        Relation ruleRelation = *intermediates.begin();
-        if (intermediates.size() > 1) {
-            for (auto relation : intermediates) {
-                ruleRelation = ruleRelation.joinedWith(relation);
-            }
-        }
-        
-        //  Project the columns that appear in the head predicate
-        Tuple newScheme = Tuple(rule->getHeadPredicate()->getItems());
-        ruleRelation.project(newScheme);
-        ruleRelation.setName(rule->getHeadPredicate()->getIdentifier());
-        Relation* headRelation = database->relationWithName(rule->getHeadPredicate()->getIdentifier());
-        
-        //  Rename the relation to make it union-compatible
-        for (unsigned int i = 0; i < headRelation->getScheme().size(); i += 1) {
-            std::string oldCol = ruleRelation.getScheme().at(i);
-            std::string newCol = headRelation->getScheme().at(i);
-            ruleRelation.rename(oldCol, newCol);
-        }
-        
-        //  Union with the relation in the database
-        for (auto t : headRelation->getContents()) {
-            std::string key = ruleRelation.getName();
-            std::string output = headRelation->stringForTuple(t);
-            printedTuples[key].insert(output);
-        }
-        ruleRelation = headRelation->unionWith(ruleRelation);
-        
-        if (database->addRelation(new Relation(ruleRelation))) {
-            didAddToDatabase = true; // True if we actually changed something.
-            
-            for (Tuple t : ruleRelation.getContents()) {
-                std::string key = ruleRelation.getName();
-                std::string output = ruleRelation.stringForTuple(t);
-                if (printedTuples.find(key) == printedTuples.end() ||
-                    printedTuples[key].find(output) == printedTuples[key].end()) {
-                    // Only print if we've not yet printed this tuple for this relation.
-                    tuplesToPrint.push_back(output);
-                    // Add output to a vector of tuples printed for ruleRelation.name
-                    printedTuples[key].insert(output);
-                }
-            }
-        }
-        
-        str << std::endl;
-        for (auto val : tuplesToPrint) {
-            str << "  " << val << std::endl;
+        Relation intermediateRelation = Relation(*relation);
+        result << evaluateQueryItem(intermediateRelation, database, predicate, false);
+        intermediates.push_back(intermediateRelation);
+    }
+    
+    if (intermediates.empty()) {
+        return result.str();
+    }
+    
+    //  Join the relations that result
+    Relation ruleRelation = *intermediates.begin();
+    if (intermediates.size() > 1) {
+        for (auto relation : intermediates) {
+            ruleRelation = ruleRelation.joinedWith(relation);
         }
     }
     
-    return str.str();
+    //  Project the columns that appear in the head predicate
+    Tuple newScheme = Tuple(rule->getHeadPredicate()->getItems());
+    ruleRelation.project(newScheme);
+    ruleRelation.setName(rule->getHeadPredicate()->getIdentifier());
+    Relation* headRelation = database->relationWithName(rule->getHeadPredicate()->getIdentifier());
+    
+    //  Rename the relation to make it union-compatible
+    for (unsigned int i = 0; i < headRelation->getScheme().size(); i += 1) {
+        string oldCol = ruleRelation.getScheme().at(i);
+        string newCol = headRelation->getScheme().at(i);
+        ruleRelation.rename(oldCol, newCol);
+    }
+    
+    for (auto t : headRelation->getContents()) {
+        string key = ruleRelation.getName();
+        string output = headRelation->stringForTuple(t);
+        printedTuples[key].insert(output);
+    }
+    
+    //  Union with the relation in the database
+    Relation oldHead = *headRelation;
+    ruleRelation = headRelation->unionWith(ruleRelation);
+    if (ruleRelation != oldHead) {
+        didAddToDatabase = true;
+    }
+    
+    if (database->addRelation(new Relation(ruleRelation))) {
+        didAddToDatabase = true;
+        
+        for (Tuple t : ruleRelation.getContents()) {
+            string key = ruleRelation.getName();
+            string output = ruleRelation.stringForTuple(t);
+            if (printedTuples.find(key) == printedTuples.end() ||
+                printedTuples[key].find(output) == printedTuples[key].end()) {
+                // Only print if we've not yet printed this tuple for this relation.
+                tuplesToPrint.push_back(output);
+                // Add output to a vector of tuples printed for ruleRelation.name
+                printedTuples[key].insert(output);
+            }
+        }
+    }
+    
+    result << std::endl;
+    for (auto val : tuplesToPrint) {
+        result << "  " << val << std::endl;
+    }
+    
+    return result.str();
+}
+
+// Evaluate the rules in each component.
+//string evaluateRulesInSubgraph(const DependencyGraph& dependencyGraph,
+string evaluateRulesInSubgraph(const set<pair<int, Rule*>>& subgraph,
+                               const DependencyGraph* depGraph,
+                               Database *database,
+                               int& passCount) {
+    std::ostringstream result = std::ostringstream();
+    map<string, set<string>> printedTuples = map<string, set<string>>();
+    
+    // If we've other nodes, we'll need to run a fixed-point algorithm.
+    bool isRecursiveDependent = true;
+    if (subgraph.size() == 1) {
+        auto nodePair = *subgraph.begin();
+        auto adjacencies = depGraph->getNodes().at(nodePair.first).getAdjacencies();
+        // If nodePair is adjacent to itself (according to original graph) then we need to recurse.
+        isRecursiveDependent = adjacencies.find(nodePair.first) != adjacencies.end();
+    }
+    
+    // Evaluate our rules
+    bool didAddToDatabase = true;
+    
+    while (didAddToDatabase) { // Stop when we've not added any new nodes.
+        didAddToDatabase = false;
+        
+        for (auto rulePair : subgraph) { // For each rule...
+            Rule* rule = rulePair.second;
+            result << evaluateRule(rule, database, didAddToDatabase, printedTuples);
+        }
+        
+        passCount += 1;
+        if (!isRecursiveDependent) { break; } // Run once if we're not recursive.
+    }
+    
+    return result.str();
 }
 
 
 // MARK: - Evaluate
 
-std::string evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies) {
+string evaluateRules(Database *database, DatalogProgram *program, bool optimizeDependencies) {
     std::ostringstream str = std::ostringstream();
 
     DependencyGraph* dependencies = buildDependencyGraph(program);
-    std::vector<DependencyGraph> components;
+    vector<DependencyGraph> components;
     
     if (optimizeDependencies) {
         str << "Dependency Graph" << std::endl;
         str << dependencies->toString() << std::endl;
-        components = stronglyConnectedComponentsFromGraph(*dependencies);
+        stronglyConnectedComponentsFromGraphReference(dependencies, components);
         
     } else {
         components = { *dependencies };
     }
-    
-    bool didAddToDatabase = true;
-    int passCount = 0;
     
     str << "Rule Evaluation" << std::endl;
     for (auto subgraph : components) {
@@ -380,17 +409,27 @@ std::string evaluateRules(Database *database, DatalogProgram *program, bool opti
             str << "SCC: " << subgraph.verticesByIDToString() << std::endl;
         }
         
-        didAddToDatabase = true;
-        while (didAddToDatabase) {
-            didAddToDatabase = false;
-            
-            std::string evalResult = evaluateRulesInSubgraph(subgraph, database, didAddToDatabase);
-            
-            if (optimizeDependencies && components.size() == 1 && components.at(0).getGraph().size() == 1 && !didAddToDatabase) {
-                str << evalResult;
+        int passCount = 0;
+        
+        if (optimizeDependencies) {
+            if (!subgraph.getNodes().empty()) {
+                // Represent the subgraph as a set
+                set<pair<int, Rule*>> subgraphSet = set<pair<int, Rule*>>();
+                for (auto nodePair : subgraph.getNodes()) {
+                    subgraphSet.insert(std::make_pair(nodePair.first, nodePair.second.getPrimaryRule()));
+                }
                 
-            } else if (didAddToDatabase || !(optimizeDependencies && components.size() > 1)) {
-                str << evalResult;
+                str << evaluateRulesInSubgraph(subgraphSet, dependencies, database, passCount);
+            }
+        } else {
+            bool didAddToDatabase = true;
+            map<string, set<string>> printedTuples = map<string, set<string>>();
+            while (didAddToDatabase) {
+                didAddToDatabase = false;
+                for (auto node : subgraph.getNodes()) {
+                    Rule* rule = node.second.getPrimaryRule();
+                    str << evaluateRule(rule, database, didAddToDatabase, printedTuples);
+                }
                 passCount += 1;
             }
         }

@@ -79,9 +79,13 @@ std::string Rule::toString() {
     return result.str();
 }
 
-bool Rule::operator ==(const Rule &other) {
+bool Rule::operator ==(const Rule &other) const {
     return (this->headPredicate->getIdentifier() == other.headPredicate->getIdentifier() &&
             this->headPredicate->getType() == other.headPredicate->getType() &&
             this->headPredicate->getItems() == other.headPredicate->getItems() &&
             this->predicates == other.predicates);
+}
+
+bool Rule::operator !=(const Rule &other) const {
+    return !(operator==(other));
 }

@@ -40,6 +40,23 @@
                BlueprintName = "TestLexerV1"
                ReferencedContainer = "container:LexerV1.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "TestDependencyGraph/testLongRunningPerformance">
+               </Test>
+               <Test
+                  Identifier = "TestGrammar/testDatalogPerformance">
+               </Test>
+               <Test
+                  Identifier = "TestRelations/testBasicRuleEvaluation54">
+               </Test>
+               <Test
+                  Identifier = "TestRelations/testBasicRuleEvaluation55">
+               </Test>
+               <Test
+                  Identifier = "TestRelations/testBasicRuleEvaluation61">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

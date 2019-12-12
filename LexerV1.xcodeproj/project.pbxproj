@@ -16,24 +16,23 @@
 		858C239E2329AC1A00526D23 /* StringRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C239C2329AC1A00526D23 /* StringRecognizer.cpp */; };
 		858C23A52329B36700526D23 /* OperatorRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A32329B36700526D23 /* OperatorRecognizer.cpp */; };
 		858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A62329EA9900526D23 /* CommentRecognizer.cpp */; };
-		858FB2962385EE0800E11C69 /* in40.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2872385AC1500E11C69 /* in40.txt */; };
-		858FB2972385EE0800E11C69 /* in44.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2932385AC1700E11C69 /* in44.txt */; };
-		858FB2982385EE0800E11C69 /* in45.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2842385AC1400E11C69 /* in45.txt */; };
-		858FB2992385EE0800E11C69 /* in46.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2942385AC1700E11C69 /* in46.txt */; };
-		858FB29A2385EE0800E11C69 /* in47.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2862385AC1500E11C69 /* in47.txt */; };
-		858FB29B2385EE0800E11C69 /* in48.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2922385AC1600E11C69 /* in48.txt */; };
-		858FB29C2385EE0800E11C69 /* in49.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB28A2385AC1500E11C69 /* in49.txt */; };
-		858FB29D2385EE0800E11C69 /* in54.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2882385AC1500E11C69 /* in54.txt */; };
-		858FB29E2385EE0800E11C69 /* in55.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2892385AC1500E11C69 /* in55.txt */; };
-		858FB29F2385EE0800E11C69 /* in61.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB27F2385AC1300E11C69 /* in61.txt */; };
-		858FB2A02385EE0800E11C69 /* in62.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 858FB2832385AC1400E11C69 /* in62.txt */; };
 		858FB2A42386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */; };
 		858FB2A52386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */; };
 		85AB4D08239F74B30044A234 /* Object.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.hpp */; };
 		85AB4D09239F74B30044A234 /* Object.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.hpp */; };
+		85B7B40C23A2DDE600646DA9 /* in20.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85B7B40A23A2DDC200646DA9 /* in20.txt */; };
 		85BBE3E82342C123002BBB2B /* DatalogProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */; };
 		85BBE3EB2342C157002BBB2B /* Rule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E92342C157002BBB2B /* Rule.cpp */; };
 		85BBE3EE2342C175002BBB2B /* Predicate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3EC2342C175002BBB2B /* Predicate.cpp */; };
+		85C7BB6723A1B48300AC3D48 /* in50.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED7672399E76400018E02 /* in50.txt */; };
+		85C7BB6823A1B48300AC3D48 /* in54.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED7632399E76400018E02 /* in54.txt */; };
+		85C7BB6923A1B48300AC3D48 /* in55.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED75D2399E76300018E02 /* in55.txt */; };
+		85C7BB6A23A1B48300AC3D48 /* in56.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED7652399E76400018E02 /* in56.txt */; };
+		85C7BB6B23A1B48300AC3D48 /* in58.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED7602399E76400018E02 /* in58.txt */; };
+		85C7BB6C23A1B48300AC3D48 /* in59.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED7622399E76400018E02 /* in59.txt */; };
+		85C7BB6D23A1B48300AC3D48 /* in61.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED76C2399E76500018E02 /* in61.txt */; };
+		85C7BB6E23A1B48300AC3D48 /* in62.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED75F2399E76400018E02 /* in62.txt */; };
+		85C7BB6F23A1B48300AC3D48 /* in64.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85CED76E2399E76500018E02 /* in64.txt */; };
 		85CED7712399FC2E00018E02 /* TestDependencyGraph.mm in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7702399FC2E00018E02 /* TestDependencyGraph.mm */; };
 		85CED7762399FDB100018E02 /* DependencyGraph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7742399FDB100018E02 /* DependencyGraph.cpp */; };
 		85CED7772399FDB100018E02 /* DependencyGraph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85CED7742399FDB100018E02 /* DependencyGraph.cpp */; };
@@ -58,20 +57,19 @@
 		85D0BCF12327099E00FEE62C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 12;
-			dstPath = samples;
+			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				858FB2962385EE0800E11C69 /* in40.txt in CopyFiles */,
-				858FB2972385EE0800E11C69 /* in44.txt in CopyFiles */,
-				858FB2982385EE0800E11C69 /* in45.txt in CopyFiles */,
-				858FB2992385EE0800E11C69 /* in46.txt in CopyFiles */,
-				858FB29A2385EE0800E11C69 /* in47.txt in CopyFiles */,
-				858FB29B2385EE0800E11C69 /* in48.txt in CopyFiles */,
-				858FB29C2385EE0800E11C69 /* in49.txt in CopyFiles */,
-				858FB29D2385EE0800E11C69 /* in54.txt in CopyFiles */,
-				858FB29E2385EE0800E11C69 /* in55.txt in CopyFiles */,
-				858FB29F2385EE0800E11C69 /* in61.txt in CopyFiles */,
-				858FB2A02385EE0800E11C69 /* in62.txt in CopyFiles */,
+				85B7B40C23A2DDE600646DA9 /* in20.txt in CopyFiles */,
+				85C7BB6723A1B48300AC3D48 /* in50.txt in CopyFiles */,
+				85C7BB6823A1B48300AC3D48 /* in54.txt in CopyFiles */,
+				85C7BB6923A1B48300AC3D48 /* in55.txt in CopyFiles */,
+				85C7BB6A23A1B48300AC3D48 /* in56.txt in CopyFiles */,
+				85C7BB6B23A1B48300AC3D48 /* in58.txt in CopyFiles */,
+				85C7BB6C23A1B48300AC3D48 /* in59.txt in CopyFiles */,
+				85C7BB6D23A1B48300AC3D48 /* in61.txt in CopyFiles */,
+				85C7BB6E23A1B48300AC3D48 /* in62.txt in CopyFiles */,
+				85C7BB6F23A1B48300AC3D48 /* in64.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +162,8 @@
 		858FB2A2238648ED00E11C69 /* EvaluatingDatabases.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EvaluatingDatabases.h; sourceTree = "<group>"; };
 		858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EvaluatingDatabases.cpp; sourceTree = "<group>"; };
 		85AB4D07239F74B30044A234 /* Object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Object.hpp; sourceTree = "<group>"; };
+		85B7B40A23A2DDC200646DA9 /* in20.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in20.txt; sourceTree = "<group>"; };
+		85B7B40B23A2DDD700646DA9 /* out20.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out20.txt; sourceTree = "<group>"; };
 		85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DatalogProgram.cpp; sourceTree = "<group>"; };
 		85BBE3E72342C123002BBB2B /* DatalogProgram.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatalogProgram.h; sourceTree = "<group>"; };
 		85BBE3E92342C157002BBB2B /* Rule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Rule.cpp; sourceTree = "<group>"; };
@@ -428,6 +428,15 @@
 			path = "Rule Evaluations";
 			sourceTree = "<group>";
 		};
+		85C7BB6623A19E2200AC3D48 /* Extra Tests */ = {
+			isa = PBXGroup;
+			children = (
+				85B7B40A23A2DDC200646DA9 /* in20.txt */,
+				85B7B40B23A2DDD700646DA9 /* out20.txt */,
+			);
+			path = "Extra Tests";
+			sourceTree = "<group>";
+		};
 		85CED75C2399E6DF00018E02 /* Basic Tests */ = {
 			isa = PBXGroup;
 			children = (
@@ -457,6 +466,7 @@
 			isa = PBXGroup;
 			children = (
 				85CED75C2399E6DF00018E02 /* Basic Tests */,
+				85C7BB6623A19E2200AC3D48 /* Extra Tests */,
 			);
 			path = "Dependency Graph Test Files";
 			sourceTree = "<group>";

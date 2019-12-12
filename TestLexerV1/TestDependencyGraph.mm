@@ -261,28 +261,50 @@
     [self runFactsFromInputFile:64 withPrefix:prefix inDomain:domain];
 }
 
+- (void)testExtraTests {
+    NSString *domain = @"Extra Tests";
+    NSString *prefix = @"in";
+    
+    [self runFactsFromInputFile:20 withPrefix:prefix inDomain:domain]; // This takes a while
+}
+
+- (void)testBetterPerformance {
+    NSString *domain = @"Basic Tests";
+    NSString *prefix = @"in";
+    
+    [self measureBlock:^{
+        [self runFactsFromInputFile:64 withPrefix:prefix inDomain:domain];
+    }];
+}
+
+- (void)testLongRunningPerformance {
+    NSString *domain = @"Extra Tests";
+    NSString *prefix = @"in";
+    
+    [self measureBlock:^{
+        [self runFactsFromInputFile:20 withPrefix:prefix inDomain:domain];
+    }];
+}
+
 // MARK: - Sructures
 
 - (void)testNode {
-    DependencyGraph::Node node = DependencyGraph::Node();
-    XCTAssert(node.getName() == "nullptr", "Wrong name on empty node.");
-    
     std::vector<std::string> identity = { "1", "2", "3" };
     Rule* r1 = new Rule();
     r1->setHeadPredicate(new Predicate(RULES, "R1")); r1->getHeadPredicate()->setItems(identity);
     
-    node = DependencyGraph::Node(r1);
+    DependencyGraph::Node node = DependencyGraph::Node(r1);
     XCTAssert(node.getName() == r1->getHeadPredicate()->getIdentifier(), "Wrong name on node.");
     
     XCTAssertEqual(node.getAdjacencies().size(), 0, "Node erroneously reported adjacencies.");
-    node.addAdjacency(0);
+    node.addAdjacency(0, nullptr);
     XCTAssertEqual(node.getAdjacencies().size(), 1, "Failed to add adjacency.");
     
     DependencyGraph::Node copy = node;
     XCTAssert(copy.getName() == node.getName(), "Failed to copy name.");
     XCTAssertEqual(copy.getAdjacencies(), node.getAdjacencies(), "Failed to copy adjacencies.");
     
-    node = DependencyGraph::Node();
+    node = DependencyGraph::Node(r1);
     copy = node;
     XCTAssert(copy.getName() == node.getName(), "Failed to copy empty name.");
     XCTAssertEqual(copy.getAdjacencies(), node.getAdjacencies(), "Failed to copy empty adjacencies.");
@@ -308,8 +330,8 @@
     
     graph = DependencyGraph();
     XCTAssert(graph.addDependency(r1, r1), "Failed to add dependency.");
-    XCTAssertEqual(graph.getGraph().at(0).getAdjacencies().size(), 1, "Graph does not contain dependency.");
-    XCTAssertEqual(*graph.getGraph().at(0).getAdjacencies().begin(), 0,
+    XCTAssertEqual(graph.getNodes().at(0).getAdjacencies().size(), 1, "Graph does not contain dependency.");
+    XCTAssertEqual(graph.getNodes().at(0).getAdjacencies().find(0), graph.getNodes().at(0).getAdjacencies().begin(),
                    "Graph does not contain dependency.");
     XCTAssert(graph.toString() == "R0:R0\n", "Graph reported incorrectly.");
     
@@ -469,20 +491,82 @@
     XCTAssertEqual(components.size(), 3, "Wrong number of components returned.");
     if (components.size() == 3) {
         // First SCC
-        bool firstEqual = components.at(0).getGraph().at(3) == graph.getGraph().at(3);
-        XCTAssert(firstEqual,
+        XCTAssert(components.at(0).getNodes().at(3) == graph.getNodes().at(3),
                   "Wrong component at SCC 1. Expected R3.");
         // Second SCC
-        XCTAssert(components.at(1).getGraph().at(4) == graph.getGraph().at(4),
+        XCTAssert(components.at(1).getNodes().at(4) == graph.getNodes().at(4),
                   "Wrong component at SCC 2. Expected R4.");
 
         // Third SCC
-        XCTAssert(components.at(2).getGraph().at(0) == graph.getGraph().at(0),
+        XCTAssert(components.at(2).getNodes().at(0) == graph.getNodes().at(0),
                   "Wrong first component at SCC 2. Expected R0.");
-        XCTAssert(components.at(2).getGraph().at(1) == graph.getGraph().at(1),
+        XCTAssert(components.at(2).getNodes().at(1) == graph.getNodes().at(1),
                   "Wrong first component at SCC 2. Expected R1.");
-        XCTAssert(components.at(2).getGraph().at(2) == graph.getGraph().at(2),
+        XCTAssert(components.at(2).getNodes().at(2) == graph.getNodes().at(2),
                   "Wrong first component at SCC 2. Expected R2.");
+    }
+    
+    delete program;
+}
+
+- (void)testStronglyConnectedComponentFromMultipleDependentRules {
+    /*
+     bob(x) :- bob(x). # R0
+     bob(x) :- jim(x). # R1
+     jim(x) :- bob(x). # R2
+     */
+    Predicate* bob = new Predicate(RULES, "bob"); bob->copyItemsIn({ "x" }); // bob(x)
+    Predicate* jim = new Predicate(RULES, "jim"); jim->copyItemsIn({ "x" }); // jim(x)
+    
+    Rule* r0 = new Rule(); r0->setHeadPredicate(bob); r0->setPredicates({ bob }); // bob(x) :- bob(x).
+    Rule* r1 = new Rule(); r1->setHeadPredicate(bob); r1->setPredicates({ jim }); // bob(x) :- jim(x).
+    Rule* r2 = new Rule(); r2->setHeadPredicate(jim); r2->setPredicates({ bob }); // jim(x) :- bob(x).
+    
+    DatalogProgram* program = new DatalogProgram("Prog");
+    std::vector<Rule*> rules = { r0, r1, r2 };
+    program->setRules(rules);
+    
+    /* Graph:
+     R0:R0,R1
+     R1:R2
+     R2:R0,R1
+     */
+    
+    DependencyGraph graph = *buildDependencyGraph(program);
+    std::string result = graph.toString();
+    std::string graphStr = "R0:R0,R1\nR1:R2\nR2:R0,R1\n";
+    XCTAssert(result == graphStr, "Built dependencies incorrectly.");
+    
+    std::vector<DependencyGraph> components = stronglyConnectedComponentsFromGraph(graph);
+    XCTAssertEqual(components.size(), 1, "Wrong number of components returned.");
+    if (components.size() == 1) {
+        // R0:R0,R1
+        XCTAssert(components.at(0).getNodes().at(0) == graph.getNodes().at(0),
+                  "Wrong component at SCC. Expected R0.");
+        
+        bool hasR0R0 = components.at(0).getNodes().at(0).getAdjacencies().find(0) != components.at(0).getNodes().at(0).getAdjacencies().end();
+        XCTAssert(hasR0R0, "Expected R0:R0.");
+        if (hasR0R0) {
+            XCTAssert(components.at(0).getNodes().at(0).getAdjacencies().at(0) == r0,
+                      "Expected R0:R0. Got different rule.");
+        }
+        
+        bool hasR0R1 = components.at(0).getNodes().at(0).getAdjacencies().find(1) != components.at(0).getNodes().at(0).getAdjacencies().end();
+        XCTAssert(hasR0R1, "Expected R0:R1");
+        if (hasR0R1) {
+            XCTAssert(components.at(0).getNodes().at(0).getAdjacencies().at(1) == r1,
+                      "Expected R0:R1. Got different rule.");
+        }
+        
+        XCTAssert(components.at(0).getNodes().at(1) == graph.getNodes().at(1),
+                  "Wrong component at SCC. Expected R1.");
+        XCTAssertEqual(components.at(0).getNodes().at(1).getAdjacencies().size(), 1,
+                       "Wrong adjacency count for R1.");
+        
+        XCTAssert(components.at(0).getNodes().at(2) == graph.getNodes().at(2),
+                  "Wrong component at SCC. Expected R2.");
+        XCTAssertEqual(components.at(0).getNodes().at(2).getAdjacencies().size(), 2,
+                       "Wrong adjacency count for R2.");
     }
     
     delete program;

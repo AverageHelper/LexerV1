@@ -29,7 +29,8 @@ public:
     
     std::string toString() override;
     
-    bool operator ==(const Rule &other);
+    bool operator ==(const Rule &other) const;
+    bool operator !=(const Rule &other) const;
 };
 
 #endif /* Rule_h */
