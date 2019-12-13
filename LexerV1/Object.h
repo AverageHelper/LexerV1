@@ -1,5 +1,5 @@
 //
-//  Object.hpp
+//  Object.h
 //  LexerV1
 //
 //  Created by James Robinson on 12/9/19.

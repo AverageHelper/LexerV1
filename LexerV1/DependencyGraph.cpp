@@ -112,16 +112,15 @@ const std::vector<DependencyGraph::Node> DependencyGraph::allVertices() const {
     return result;
 }
 
-int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int startingPostorder) {
+int DependencyGraph::computePostOrderNumbersForSubtreeStartingAt(int startIndex, int startingPostorder, std::set<int>& visited) {
     if (this->nodes.empty()) {
         return -1;
     }
     
-    std::set<int> visited = std::set<int>();
     std::stack<int> stack = std::stack<int>();
     int previousPostOrder = startingPostorder;
     
-    stack.push(start);
+    stack.push(startIndex);
     
     while (!stack.empty()) {
         int currentNode = stack.top();
@@ -129,16 +128,18 @@ int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int 
         bool alreadyVisited = !visited.insert(currentNode).second;
         if (alreadyVisited) {
             Node node = nodes.at(currentNode);
+            if (node.getPostOrderNumber() > -1) { stack.pop(); continue; }
             node.setPostOrderNumber(previousPostOrder++);
             nodes[currentNode] = node;
             stack.pop();
             continue;
         }
         
-        // The numerically-first index goes next.
-        for (auto rulePair : nodes.at(currentNode).getAdjacencies()) {
-            if (visited.find(rulePair.first) == visited.end()) { // If not already visited...
-                stack.push(rulePair.first);
+        // The numerically-first index goes next. (so we iterate here in reverse)
+        auto adjacencies = nodes.at(currentNode).getAdjacencies();
+        for (auto rulePair = adjacencies.rbegin(); rulePair != adjacencies.rend(); rulePair++) {
+            if (visited.find(rulePair->first) == visited.end()) { // If not already visited...
+                stack.push(rulePair->first);
             }
         }
         
@@ -148,11 +149,20 @@ int DependencyGraph::computePostOrderNumbersForVectorsStartingAt(int start, int 
 }
 
 void DependencyGraph::computePostOrderNumbersForVertices() {
+    
+    // Reset old post-order numbers.
+    for (auto nodePair : nodes) {
+        Node newNode = nodePair.second;
+        newNode.setPostOrderNumber(-1);
+        nodes[nodePair.first] = newNode;
+    }
+    
     // Run DFS-Forest on the dependency graph.
-    int nextPostorder = computePostOrderNumbersForVectorsStartingAt(0);
+    std::set<int> visited = std::set<int>();
+    int nextPostorder = computePostOrderNumbersForSubtreeStartingAt(0, 1, visited);
     for (auto pair : nodes) {
         if (pair.second.getPostOrderNumber() > -1) { continue; }
-        nextPostorder = computePostOrderNumbersForVectorsStartingAt(pair.first, nextPostorder);
+        nextPostorder = computePostOrderNumbersForSubtreeStartingAt(pair.first, nextPostorder, visited);
     }
 }
 
@@ -204,13 +214,19 @@ std::string DependencyGraph::postOrderNumbers() {
 DependencyGraph DependencyGraph::inverted() const {
     DependencyGraph result = DependencyGraph();
     
-    for (auto pair : getNodes()) { // For each node...
-        result.addDependency(pair.second.getPrimaryRule(), nullptr); // Number the node
-        
-        for (auto adj : pair.second.getAdjacencies()) { // For each edge...
-            int ruleID = adj.first;
-            Rule* adjRule = getNodes().at(ruleID).getPrimaryRule();
-            result.addDependency(adjRule, pair.second.getPrimaryRule()); // Reverse it!
+    for (auto nodePair : getNodes()) { // For each node...
+        Node newNode = Node(nodePair.second.getPrimaryRule());
+        result.addVertex(newNode, nodePair.first);  // Number it in the new graph.
+    }
+    
+    for (auto nodePair : getNodes()) {
+        // Reverse each node's edges
+        for (auto adj : nodePair.second.getAdjacencies()) { // For each adjacency...
+            int adjID = adj.first;
+            
+            Node newNode = result.getNodes().at(adjID);
+            newNode.addAdjacency(nodePair.first, nodePair.second.getPrimaryRule());  // Make adj: this
+            result.addVertex(newNode, adjID);
         }
     }
     
@@ -227,7 +243,7 @@ std::string DependencyGraph::toString() const {
         
         std::map<int, Rule*> adjacencies = pair.second.getAdjacencies();
         int adjacenciesListed = 0;
-        size_t adjacencyCount = adjacencies.size();
+        int adjacencyCount = static_cast<int>(adjacencies.size());
         for (auto rulePair : adjacencies) {
             result << "R" << rulePair.first;
             

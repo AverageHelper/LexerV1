@@ -33,7 +33,7 @@ public:
     bool addVertex(const Node& node, int identifier);
     Rule* dependencyWithIdentifier(const std::string& identifier);
     
-    /// A string representation of the graph's post-order numbers.
+    /// Evaluates the graph's post-order numbers, then returns a string representing them.
     std::string postOrderNumbers();
     
     /// Returns an inverted copy of the graph.
@@ -61,7 +61,9 @@ private:
     
     /// Computes post-order numbers for each node on the graph, starting at the node with the given index @c start.
     /// @Returns The next post-order number, if we were to run another DFS on a different part of the forest.
-    int computePostOrderNumbersForVectorsStartingAt(int start, int startingPostorder = 1);
+    int computePostOrderNumbersForSubtreeStartingAt(int start,
+                                                    int startingPostorder,
+                                                    std::set<int>& visited);
 };
 
 

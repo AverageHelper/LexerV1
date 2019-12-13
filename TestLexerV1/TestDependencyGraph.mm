@@ -286,6 +286,107 @@
     }];
 }
 
+// MARK: - Strongly-connected Components
+
+- (void)testInvertGraph {
+    Rule* rule0 = new Rule();
+    Rule* rule1 = new Rule();
+    Rule* rule2 = new Rule();
+    Rule* rule3 = new Rule();
+    Rule* rule4 = new Rule();
+    Rule* rule5 = new Rule();
+    Rule* rule6 = new Rule();
+    Rule* rule7 = new Rule();
+    Rule* rule8 = new Rule();
+    
+    DependencyGraph::Node r0 = DependencyGraph::Node(rule0);
+    DependencyGraph::Node r1 = DependencyGraph::Node(rule1);
+    DependencyGraph::Node r2 = DependencyGraph::Node(rule2);
+    DependencyGraph::Node r3 = DependencyGraph::Node(rule3);
+    DependencyGraph::Node r4 = DependencyGraph::Node(rule4);
+    DependencyGraph::Node r5 = DependencyGraph::Node(rule5);
+    DependencyGraph::Node r6 = DependencyGraph::Node(rule6);
+    DependencyGraph::Node r7 = DependencyGraph::Node(rule7);
+    DependencyGraph::Node r8 = DependencyGraph::Node(rule8);
+    
+    DependencyGraph graph = DependencyGraph();
+    XCTAssert(graph.addVertex(r0, 0));
+    XCTAssert(graph.addVertex(r1, 1));
+    XCTAssert(graph.addVertex(r2, 2));
+    XCTAssert(graph.addVertex(r3, 3));
+    XCTAssert(graph.addVertex(r4, 4));
+    XCTAssert(graph.addVertex(r5, 5));
+    XCTAssert(graph.addVertex(r6, 6));
+    XCTAssert(graph.addVertex(r7, 7));
+    XCTAssert(graph.addVertex(r8, 8));
+    
+    r1 = graph.getNodes().at(1);
+    XCTAssert(r1.addAdjacency(2, rule2));
+    XCTAssert(graph.addVertex(r1, 1));
+    
+    r2 = graph.getNodes().at(2);
+    XCTAssert(r2.addAdjacency(0, rule0));
+    XCTAssert(r2.addAdjacency(1, rule1));
+    XCTAssert(r2.addAdjacency(3, rule3));
+    XCTAssert(graph.addVertex(r2, 2));
+    
+    r3 = graph.getNodes().at(3);
+    XCTAssert(r3.addAdjacency(0, rule0));
+    XCTAssert(r3.addAdjacency(1, rule1));
+    XCTAssert(r3.addAdjacency(3, rule3));
+    XCTAssert(graph.addVertex(r3, 3));
+    
+    r4 = graph.getNodes().at(4);
+    XCTAssert(r4.addAdjacency(0, rule0));
+    XCTAssert(r4.addAdjacency(1, rule1));
+    XCTAssert(r4.addAdjacency(2, rule2));
+    XCTAssert(r4.addAdjacency(3, rule3));
+    XCTAssert(graph.addVertex(r4, 4));
+    
+    r6 = graph.getNodes().at(6);
+    XCTAssert(r6.addAdjacency(4, rule4));
+    XCTAssert(r6.addAdjacency(5, rule5));
+    XCTAssert(r6.addAdjacency(7, rule7));
+    XCTAssert(r6.addAdjacency(8, rule8));
+    XCTAssert(graph.addVertex(r6, 6));
+    
+    r7 = graph.getNodes().at(7);
+    XCTAssert(r7.addAdjacency(5, rule5));
+    XCTAssert(r7.addAdjacency(6, rule6));
+    XCTAssert(r7.addAdjacency(7, rule7));
+    XCTAssert(r7.addAdjacency(8, rule8));
+    XCTAssert(graph.addVertex(r7, 7));
+    
+    r8 = graph.getNodes().at(8);
+    XCTAssert(r8.addAdjacency(5, rule5));
+    XCTAssert(r8.addAdjacency(7, rule7));
+    XCTAssert(r8.addAdjacency(8, rule8));
+    XCTAssert(graph.addVertex(r8, 8));
+    
+    std::string depGraph = "R0:\nR1:R2\nR2:R0,R1,R3\nR3:R0,R1,R3\nR4:R0,R1,R2,R3\nR5:\nR6:R4,R5,R7,R8\nR7:R5,R6,R7,R8\nR8:R5,R7,R8\n";
+    XCTAssert(graph.toString() == depGraph, "Wrong dependency graph created.");
+    
+    DependencyGraph inverted = graph.inverted();
+    std::string invGraph = "R0:R2,R3,R4\nR1:R2,R3,R4\nR2:R1,R4\nR3:R2,R3,R4\nR4:R6\nR5:R6,R7,R8\nR6:R7\nR7:R6,R7,R8\nR8:R6,R7,R8\n";
+    XCTAssert(inverted.toString() == invGraph, "Wrong graph after reverse. Got\n'%s'", inverted.toString().c_str());
+    
+    std::string invPONums = "R0: 8\nR1: 6\nR2: 7\nR3: 5\nR4: 4\nR5: 9\nR6: 3\nR7: 2\nR8: 1\n";
+    std::string poOne = inverted.postOrderNumbers();
+    std::string poTwo = inverted.postOrderNumbers();
+    XCTAssert(poOne == poTwo, "We get inconsistent post-order numbers. Compare\n'%s' vs.\n'%s'", poOne.c_str(), poTwo.c_str());
+    XCTAssert(poOne == invPONums, "Wrong post-order representation of inverted graph. Got\n'%s'", poOne.c_str());
+    
+    delete rule0;
+    delete rule1;
+    delete rule2;
+    delete rule3;
+    delete rule4;
+    delete rule5;
+    delete rule6;
+    delete rule7;
+    delete rule8;
+}
+
 // MARK: - Sructures
 
 - (void)testNode {
@@ -440,6 +541,108 @@
     
     delete program;
     delete graph;
+}
+
+- (void)testAnotherGraph {
+    return;
+//    /*
+//     Alpha(x, y, z) :- Bravo(a, b, z), Charlie(x, y, c).  # R0
+//     Bravo(x, y, z) :- Charlie(a, x, z), Alpha(y, a, b).  # R1
+//     Charlie(x, y, z) :- Delta(z, y, x).                  # R2
+//     Delta(x, y, z) :- Charlie(z, x, y).                  # R3
+//     Delta(x, y, z) :- Echo(y, z, x).                     # R4
+//     */
+//    // Alpha(x, y, z)
+//    Predicate* alpha1 = new Predicate(RULES, "Alpha"); alpha1->copyItemsIn({ "x", "y", "z" });
+//    XCTAssert(alpha1->toString() == "Alpha(x,y,z)", "Wrong string for predicate.");
+//    // Alpha(y, a, b)
+//    Predicate* alpha2 = new Predicate(RULES, "Alpha"); alpha2->copyItemsIn({ "y", "a", "b" });
+//    XCTAssert(alpha2->toString() == "Alpha(y,a,b)", "Wrong string for predicate.");
+//    // Bravo(a, b, z)
+//    Predicate* bravo = new Predicate(RULES, "Bravo"); bravo->copyItemsIn({ "x", "y", "z" });
+//    XCTAssert(bravo->toString() == "Bravo(a,b,z)", "Wrong string for predicate.");
+//    // Charlie(x, y, c)
+//    Predicate* charlie1 = new Predicate(RULES, "Charlie"); charlie1->copyItemsIn({ "x", "y", "c" });
+//    XCTAssert(charlie1->toString() == "Charlie(x,y,c)", "Wrong string for predicate.");
+//    // Charlie(a, x, z)
+//    Predicate* charlie2 = new Predicate(RULES, "Charlie"); charlie2->copyItemsIn({ "a", "x", "z" });
+//    XCTAssert(charlie2->toString() == "Charlie(a,x,z)", "Wrong string for predicate.");
+//    // Delta(z, y, x)
+//    Predicate* delta = new Predicate(RULES, "Delta"); delta->copyItemsIn({ "z", "y", "x" });
+//    XCTAssert(delta->toString() == "Delta(z,y,x)", "Wrong string for predicate.");
+//    // Echo(y, z, x)
+//    Predicate* echo = new Predicate(RULES, "Echo"); echo->copyItemsIn({ "y", "z", "x" });
+//    XCTAssert(echo->toString() == "Echo(y,z,x)", "Wrong string for predicate.");
+//
+//    // Alpha(x, y, z) :- Bravo(a, b, z), Charlie(x, y, c).
+//    Rule* r0 = new Rule(); r0->setHeadPredicate(alpha1); r0->setPredicates({ bravo, charlie1 });
+//    XCTAssert(r0->toString() == "Alpha(x,y,z) :- Bravo(a,b,z),Charlie(x,y,c).", "Wrong string for rule.");
+//    // Bravo(x, y, z) :- Charlie(a, x, z), Alpha(y, a, b).
+//    Rule* r1 = new Rule(); r1->setHeadPredicate(bravo); r1->setPredicates({ charlie2, alpha2 });
+//    XCTAssert(r1->toString() == "Bravo(x,y,z) :- Charlie(a,x,z),Alpha(y,a,b).", "Wrong string for rule.");
+//    // Charlie(x, y, z) :- Delta(z, y, x).
+//    Rule* r2 = new Rule(); r2->setHeadPredicate(charlie1); r2->setPredicates({ delta });
+//    XCTAssert(r2->toString() == "B(X,Y) :- B(Y,X).", "Wrong string for rule.");
+////    Rule* r3 = new Rule(); r3->setHeadPredicate(delta); r3->setPredicates({ echo, g }); // E(X,Y) :- F(X,Y),G(X,Y).
+//    XCTAssert(r3->toString() == "E(X,Y) :- F(X,Y),G(X,Y).", "Wrong string for rule.");
+//    Rule* r4 = new Rule(); r4->setHeadPredicate(delta); r4->setPredicates({ delta, echo }); // E(X,Y) :- E(X,Y),F(X,Y).
+//    XCTAssert(r4->toString() == "E(X,Y) :- E(X,Y),F(X,Y).", "Wrong string for rule.");
+//
+//    DatalogProgram* program = new DatalogProgram("Prog");
+//    std::vector<Rule*> rules = { r0, r1, r2, r3, r4 };
+//    program->setRules(rules);
+//
+//    /* Graph:
+//     R0: R1 R2
+//     R1: R0
+//     R2: R1 R2
+//     R3:
+//     R4: R3 R4
+//     */
+//
+//    DependencyGraph* graph = buildDependencyGraph(program);
+//    std::string result = graph->toString();
+//    std::string graphStr = "R0:R1,R2\nR1:R0\nR2:R1,R2\nR3:\nR4:R3,R4\n";
+//    XCTAssert(result == graphStr, "Built dependencies incorrectly.");
+//
+//    DependencyGraph* reversed = new DependencyGraph(*graph);
+//    invert(*reversed);
+//    result = reversed->toString();
+//    XCTAssert(result != graphStr, "No change after graph invert.");
+//
+//    /* Inverted:
+//     R0: R1
+//     R1: R0 R2
+//     R2: R0 R2
+//     R3: R4
+//     R4: R4
+//     */
+//
+//    graphStr = "R0:R1\nR1:R0,R2\nR2:R0,R2\nR3:R4\nR4:R4\n";
+//    XCTAssert(result == graphStr, "Inverted graph incorrectly.");
+//
+//    /* Post-order numbers
+//     R0: 3
+//     R1: 2
+//     R2: 1
+//     R3: 5
+//     R4: 4
+//     */
+//
+//    result = reversed->postOrderNumbers();
+//    graphStr = "R0: 3\nR1: 2\nR2: 1\nR3: 5\nR4: 4\n";
+//    XCTAssert(result == graphStr, "Incorrect post-order numbers of inverted graph.");
+//
+//    std::vector<std::pair<int, DependencyGraph::Node>> postOrdering = reversed->postOrdering();
+//    std::vector<std::string> postOrderingStrings = std::vector<std::string>();
+//    for (auto pair : postOrdering) {
+//        postOrderingStrings.push_back("R" + std::to_string(pair.first));
+//    }
+//    std::vector<std::string> expectedPostOrderingStrings = { "R2", "R1", "R0", "R4", "R3" };
+//    XCTAssert(postOrderingStrings == expectedPostOrderingStrings, "Wrong post-order ordering returned.");
+//
+//    delete program;
+//    delete graph;
 }
 
 - (void)testStronglyConnectedComponents {

@@ -80,9 +80,11 @@ std::string Rule::toString() {
 }
 
 bool Rule::operator ==(const Rule &other) const {
-    return (this->headPredicate->getIdentifier() == other.headPredicate->getIdentifier() &&
+    return (this->headPredicate == other.headPredicate &&
+            ((this->headPredicate == nullptr && other.headPredicate == nullptr) ||
+            (this->headPredicate->getIdentifier() == other.headPredicate->getIdentifier() &&
             this->headPredicate->getType() == other.headPredicate->getType() &&
-            this->headPredicate->getItems() == other.headPredicate->getItems() &&
+            this->headPredicate->getItems() == other.headPredicate->getItems())) &&
             this->predicates == other.predicates);
 }
 

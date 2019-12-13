@@ -18,8 +18,8 @@
 		858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858C23A62329EA9900526D23 /* CommentRecognizer.cpp */; };
 		858FB2A42386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */; };
 		858FB2A52386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */; };
-		85AB4D08239F74B30044A234 /* Object.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.hpp */; };
-		85AB4D09239F74B30044A234 /* Object.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.hpp */; };
+		85AB4D08239F74B30044A234 /* Object.h in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.h */; };
+		85AB4D09239F74B30044A234 /* Object.h in Sources */ = {isa = PBXBuildFile; fileRef = 85AB4D07239F74B30044A234 /* Object.h */; };
 		85B7B40C23A2DDE600646DA9 /* in20.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 85B7B40A23A2DDC200646DA9 /* in20.txt */; };
 		85BBE3E82342C123002BBB2B /* DatalogProgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */; };
 		85BBE3EB2342C157002BBB2B /* Rule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 85BBE3E92342C157002BBB2B /* Rule.cpp */; };
@@ -161,7 +161,7 @@
 		858FB2952385AC1700E11C69 /* out61.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out61.txt; sourceTree = "<group>"; };
 		858FB2A2238648ED00E11C69 /* EvaluatingDatabases.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EvaluatingDatabases.h; sourceTree = "<group>"; };
 		858FB2A32386EBD600E11C69 /* EvaluatingDatabases.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EvaluatingDatabases.cpp; sourceTree = "<group>"; };
-		85AB4D07239F74B30044A234 /* Object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Object.hpp; sourceTree = "<group>"; };
+		85AB4D07239F74B30044A234 /* Object.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Object.h; sourceTree = "<group>"; };
 		85B7B40A23A2DDC200646DA9 /* in20.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = in20.txt; sourceTree = "<group>"; };
 		85B7B40B23A2DDD700646DA9 /* out20.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = out20.txt; sourceTree = "<group>"; };
 		85BBE3E62342C123002BBB2B /* DatalogProgram.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DatalogProgram.cpp; sourceTree = "<group>"; };
@@ -506,7 +506,7 @@
 				85F953A52371141F008D5D69 /* Relational Database */,
 				85CED7732399FCD700018E02 /* Dependency Graph */,
 				85D0BCF62327099E00FEE62C /* main.cpp */,
-				85AB4D07239F74B30044A234 /* Object.hpp */,
+				85AB4D07239F74B30044A234 /* Object.h */,
 			);
 			path = LexerV1;
 			sourceTree = "<group>";
@@ -841,7 +841,7 @@
 				85FDB0A7233EAED200A90CC8 /* DatalogCheck.cpp in Sources */,
 				85F953A823711457008D5D69 /* Relation.cpp in Sources */,
 				858C239A2329A73700526D23 /* IDRecognizer.cpp in Sources */,
-				85AB4D08239F74B30044A234 /* Object.hpp in Sources */,
+				85AB4D08239F74B30044A234 /* Object.h in Sources */,
 				85BBE3E82342C123002BBB2B /* DatalogProgram.cpp in Sources */,
 				858FB2A42386EBD600E11C69 /* EvaluatingDatabases.cpp in Sources */,
 				858C23A82329EA9900526D23 /* CommentRecognizer.cpp in Sources */,
@@ -867,7 +867,7 @@
 				85F947522363D009006C460E /* OperatorRecognizer.cpp in Sources */,
 				85F947532363D009006C460E /* IDRecognizer.cpp in Sources */,
 				85F947542363D009006C460E /* StringRecognizer.cpp in Sources */,
-				85AB4D09239F74B30044A234 /* Object.hpp in Sources */,
+				85AB4D09239F74B30044A234 /* Object.h in Sources */,
 				85F953AE23723378008D5D69 /* Tuple.cpp in Sources */,
 				856F2B002369EA3100BE23F7 /* TestUtils.m in Sources */,
 				85F947552363D009006C460E /* CommentRecognizer.cpp in Sources */,

@@ -42,6 +42,12 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "TestDependencyGraph/testBetterPerformance">
+               </Test>
+               <Test
+                  Identifier = "TestDependencyGraph/testExtraTests">
+               </Test>
+               <Test
                   Identifier = "TestDependencyGraph/testLongRunningPerformance">
                </Test>
                <Test
